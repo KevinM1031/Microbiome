@@ -20,13 +20,17 @@ public class AminoAcid {
 	public static final int ND_ENERGY = 40;
 	public static final double NP_RADIUS = TRUE_RADIUS*8;
 	public static final int NP_ENERGY = 240;
-	public static final int PA_ENERGY = 30;
-	public static final int PN_ENERGY = 40;
-	public static final double AP_RADIUS = 60;
-	public static final double DN_TEMPERATURE = 30;
-	public static final double DD_TEMPERATURE = -20;
-	public static final double PD_TEMPERATURE = 5;
+	public static final int PA_ENERGY = 10;
+	public static final int PN_ENERGY = 540;
+	public static final double AP_RADIUS = 20;
+	public static final double DN_TEMPERATURE = 11;
+	public static final double DN_ENERGY = 4;
+	public static final double DD_TEMPERATURE = -6;
+	public static final double PD_TEMPERATURE = 4;
 	public static final double DP_REDUCTION = 10;
+	public static final int AN_RADIUS = 24;
+	public static final int AA_RADIUS = 25;
+	public static final int AD_RADIUS = 31;
 	
 	private Base base1;
 	private Base base2;
@@ -36,13 +40,13 @@ public class AminoAcid {
 	private Protein protein;
 	
 	private boolean active;
-	private String interactor;
 	private AminoAcid pair;
 	private double speed;
 	
 	private int branchCount;
 	private int mineralCount;
 	private int mineralPair;
+	private int tier;
 	private Color color;
 	
 	public AminoAcid(Protein protein, Base base1, Base base2, Base base3, Point position) {
@@ -54,8 +58,8 @@ public class AminoAcid {
 		this.active = false;
 		this.speed = 0;
 		
-		this.interactor = null;
 		this.pair = null;
+		this.tier = base3.toInt();
 		
 		this.branchCount = initBranchCount();
 		this.mineralCount = initMineralCount();
@@ -64,9 +68,7 @@ public class AminoAcid {
 	}
 	
 	public void checkActivity() {
-		
-		interactor = null;
-		
+				
 		if(typeEquals("PA")) {
 			active = checkActivity_PA();
 		}
@@ -77,17 +79,16 @@ public class AminoAcid {
 		
 		else if(typeEquals("NP")) {
 			active = true;
-			interactor = getInteractor_NP();
 		}
 		
 		else if(typeEquals("DA")) {
 			active = true;
-			speed += 2;
+			speed += tier;
 		}
 		
 		else if(typeEquals("NN") && (pair = getPair_NN()) != null) {
 			active = true;
-			speed += 10;
+			speed += 2*tier + 2*pair.getTier();
 		}
 		
 		else if(typeEquals("ND") || typeEquals("PP") || typeEquals("DP")) {
@@ -101,46 +102,44 @@ public class AminoAcid {
 		
 		double timeElapsed = (System.currentTimeMillis()-prevUpdateTime)/Microbiome.timeSpeed + 1;
 		double tempMod = Utility.tempMod(protein.getTemperature());
-		double modifier = timeElapsed * tempMod;
+		double modifier = timeElapsed * tempMod * tier;
 		double tempModPA = Utility.tempModPA(protein.getTemperature());
 		
 		if(active) {
 			
 			// photosynthesis
 			if(typeEquals("PA")) {
-				protein.getStorage().addEnergy((int) (PA_ENERGY*modifier));
+				protein.getStorage().addEnergy((int) (PA_ENERGY*modifier*Environment.getBrightness(position, height)));
 								
-				switch((int) (Math.random()*300.0/timeElapsed*tempModPA)) {
-					case 1: protein.getStorage().addN(1); break;
-					case 2: protein.getStorage().addA(1); break;
-					case 3: protein.getStorage().addD(1); break;
-					case 4: protein.getStorage().addP(1); break;
+				switch((int) (Math.random()*Math.max(750.0/timeElapsed*tempModPA, 4))) {
+					case 1: protein.getStorage().addN(tier); break;
+					case 2: protein.getStorage().addA(tier); break;
+					case 3: protein.getStorage().addD(tier); break;
+					case 4: protein.getStorage().addP(tier); break;
 				}
 				
-				switch((int) (Math.random()*3000.0/timeElapsed*tempModPA)) {
-					case 1: protein.getStorage().addPh(1); break;
-					case 2: protein.getStorage().addCr(1); break;
-					case 3: protein.getStorage().addNc(1); break;
-					case 4: protein.getStorage().addIo(1); break;
+				if((int) (Math.random()*300.0/timeElapsed*tempModPA) == 1)
+					protein.getStorage().addPh(tier);
+				if((int) (Math.random()*800.0/timeElapsed*tempModPA) == 1)
+					protein.getStorage().addIo(tier);
+				
+				switch((int) (Math.random()*Math.max(90000.0/timeElapsed*tempModPA, 3))) {
+					case 1: protein.getStorage().addCr(tier); break;
+					case 2: protein.getStorage().addNc(tier); break;
 				}
 			}
 			
 			// fr generator
-			if(typeEquals("PN") && protein.getStorage().removeFr((int) (1*timeElapsed))) {
-				protein.getStorage().addEnergy((int) (PN_ENERGY*modifier));
+			if(typeEquals("PN") && protein.getStorage().getFr() > protein.getStorage().getMaxFr()/2) {
+				protein.getStorage().removeFr(1);
 				
-				switch((int) (Math.random()*200.0/timeElapsed)) {
-					case 1: protein.getStorage().addN(1); break;
-					case 2: protein.getStorage().addA(1); break;
-					case 3: protein.getStorage().addD(1); break;
-					case 4: protein.getStorage().addP(1); break;
-				}
+				protein.getStorage().addEnergy((int) (PN_ENERGY*tier));
 				
-				switch((int) (Math.random()*500.0/timeElapsed)) {
-					case 1: protein.getStorage().addPh(1); break;
-					case 2: protein.getStorage().addCr(1); break;
-					case 3: protein.getStorage().addNc(1); break;
-					case 4: protein.getStorage().addIo(1); break;
+				switch((int) (Math.random()*50.0)) {
+					case 1: protein.getStorage().addN(tier); break;
+					case 2: protein.getStorage().addA(tier); break;
+					case 3: protein.getStorage().addD(tier); break;
+					case 4: protein.getStorage().addP(tier); break;
 				}
 			}
 			
@@ -158,7 +157,7 @@ public class AminoAcid {
 					for(AminoAcid acid : protein.getAcids()) {
 						
 						double dist = position.distanceTo(acid.getPosition());
-						if(dist <= ND_RADIUS*tempMod + AminoAcid.TRUE_RADIUS && protein.isAlive()) {
+						if(dist <= getNDRadius() + AminoAcid.TRUE_RADIUS && protein.isAlive()) {
 							protein.kill(proteinRemoveList, resources, width, height);
 						}
 					}
@@ -174,15 +173,13 @@ public class AminoAcid {
 					for(AminoAcid acid : protein.getAcids()) {
 						
 						double dist = position.distanceTo(acid.getPosition());
-						Base base = Base.translateChar(interactor.charAt(0));
 						
-						if(protein.equals(this.protein) && dist <= NP_RADIUS*tempMod + AminoAcid.TRUE_RADIUS) {
-							if(acid.typeEquals("PA") || acid.typeEquals("PN") || acid.typeEquals("PD"))
+						if(protein.equals(this.protein) && dist <= getNPRadius() + AminoAcid.TRUE_RADIUS) {
+							if(acid.typeEquals("PA") || acid.typeEquals("PN") || acid.typeEquals("AA"))
 								protein.kill(proteinRemoveList, resources, width, height);
 						}
 						
-						else if(dist <= NP_RADIUS*tempMod + AminoAcid.TRUE_RADIUS && dist > RADIUS && 
-								(acid.getBase1().equals(base) || acid.getBase2().equals(base)) && protein.isAlive())
+						else if(dist <= getNPRadius() + AminoAcid.TRUE_RADIUS && dist > RADIUS && protein.isAlive())
 							protein.kill(proteinRemoveList, resources, width, height);
 					}
 				}
@@ -191,7 +188,7 @@ public class AminoAcid {
 			// spore production
 			else if(typeEquals("PP")) {
 				if(spores.size() < Microbiome.MAX_SPORES && protein.getGenome().canReplicate(protein.getStorage())) {
-					spores.add(protein.getGenome().replicate(protein.getStorage(), position.clone()));
+					spores.add(protein.getGenome().replicate(protein.getStorage(), position.clone(), tier));
 					protein.addSporeCount();
 				}
 			}
@@ -208,7 +205,7 @@ public class AminoAcid {
 			
 			dist = resource.getRadius() + TRUE_RADIUS + RESOURCE_PICKUP_RADIUS_BONUS;
 			if(typeEquals("AP") && protein.isGathering())
-				dist += AP_RADIUS*tempMod;
+				dist += getAPRadius();
 			
 			if(protein.getStorage().canStore(resource) && position.distanceTo(resource.getPosition()) < dist) {
 				
@@ -262,6 +259,22 @@ public class AminoAcid {
 		return color;
 	}
 	
+	public int getTier() {
+		return tier;
+	}
+	
+	public double getNDRadius() {
+		return ND_RADIUS*Utility.tempMod(protein.getTemperature())*Math.sqrt(tier);
+	}
+	
+	public double getNPRadius() {
+		return NP_RADIUS*Utility.tempMod(protein.getTemperature())*Math.sqrt(tier);
+	}
+	
+	public double getAPRadius() {
+		return AP_RADIUS*Utility.tempMod(protein.getTemperature())*Math.sqrt(tier);
+	}
+	
 	public boolean isActive() {
 		return active;
 	}
@@ -292,7 +305,7 @@ public class AminoAcid {
 			if(position.distanceTo(acid.getPosition()) < TRUE_RADIUS*2 && acid.typeEquals("PA"))
 				neighbor++;
 		}
-		return neighbor >= 3;
+		return neighbor >= 2;
 	}
 	
 	private boolean checkActivity_PN() {
@@ -324,10 +337,6 @@ public class AminoAcid {
 		return null;
 	}
 	
-	private String getInteractor_NP() {
-		return "" + getBase3().toChar();
-	}
-	
 	private Color initColor() {
 		switch(getCode().substring(0, 2)) {
 			case "DA": return Color.getHSBColor(0.58f, 0.69f, 1f); // light blue
@@ -351,25 +360,7 @@ public class AminoAcid {
 	}
 	
 	private int initMineralPair() {
-		switch(getCode().substring(0, 2)) {
-			case "DA": return Mineral.Io;
-			case "NN": return Mineral.Io;
-			case "NA": return Mineral.Nc;
-			case "AN": return Mineral.Ph;
-			case "AA": return Mineral.Ph;
-			case "AD": return Mineral.Ph;
-			case "PP": return Mineral.Nc;
-			case "AP": return Mineral.Fr;
-			case "PA": return Mineral.Ph;
-			case "PN": return Mineral.Fr;
-			case "PD": return Mineral.Fr;
-			case "ND": return Mineral.Cr;
-			case "NP": return Mineral.Cr;
-			case "DN": return Mineral.Nc;
-			case "DD": return Mineral.Nc;
-			case "DP": return Mineral.Io;
-			default: return 0;
-		}
+		return getMineralPair(getCode().substring(0, 2));
 	}
 	
 	private int initBranchCount() {
@@ -400,7 +391,7 @@ public class AminoAcid {
 			case "AN": return Mineral.Ph;
 			case "AA": return Mineral.Ph;
 			case "AD": return Mineral.Ph;
-			case "PP": return Mineral.Nc;
+			case "PP": return Mineral.Io;
 			case "AP": return Mineral.Fr;
 			case "PA": return Mineral.Ph;
 			case "PN": return Mineral.Fr;

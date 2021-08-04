@@ -101,6 +101,7 @@ public class Genome {
 	}
 	
 	public boolean canReplicate(Storage storage) {
+				
 		return  N <= storage.getN() &&
 				A <= storage.getA() &&
 				D <= storage.getD() &&
@@ -113,7 +114,7 @@ public class Genome {
 				storage.getEnergy() >= storage.getMaxEnergy()*0.9;
 	}
 	
-	public Spore replicate(Storage storage, Point position) {
+	public Spore replicate(Storage storage, Point position, int tier) {
 		storage.removeN(N);
 		storage.removeA(A);
 		storage.removeD(D);
@@ -125,7 +126,9 @@ public class Genome {
 		storage.removeFr(Fr);
 		storage.removeEnergy(storage.getMaxEnergy()/2);
 
-		return new Spore(this.clone(true), storage.getMaxEnergy()/2, position);
+		boolean far = (tier%2 == 0);
+		boolean longIncubation = (tier > 2);
+		return new Spore(this.clone(true), storage.getMaxEnergy()/2, position, far, longIncubation);
 	}
 	
 	public int length() {
@@ -191,14 +194,13 @@ public class Genome {
 				acids.add(acid);
 				info.addCount(acid);
 				
-				// Internal node; continue branching
-				if(b.toBool()) {
-					int nextBranchCount = acid.getBranchCount();
-					
-					for(int i = 1; i <= (isHead ? nextBranchCount : nextBranchCount-1); i++) {
-						translate(protein, acids, seqIter, info, nextBranchCount, i, position, rotation, false);
-					}
-				} return info;
+				int nextBranchCount = acid.getBranchCount();
+				int s = b.toInt();
+				for(int i = s; s != 4 && i <= (isHead ? nextBranchCount : nextBranchCount-1); i++) {
+					translate(protein, acids, seqIter, info, nextBranchCount, i, position, rotation, false);
+				}
+				
+				return info;
 			}
 		}
 		
@@ -232,13 +234,13 @@ public class Genome {
 			
 			if(m == 2) {
 				switch(AminoAcid.getMineralPair(first2Bases)) {
-					case Mineral.Ph: Ph += b.toInt(); break;
-					case Mineral.Cr: Cr += b.toInt(); break;
-					case Mineral.Nc: Nc += b.toInt(); break;
-					case Mineral.Io: Io += b.toInt(); break;
-					case Mineral.Fr: Fr += b.toInt(); break;
+					case Mineral.Ph: Ph += b.toInt()-1; break;
+					case Mineral.Cr: Cr += b.toInt()-1; break;
+					case Mineral.Nc: Nc += b.toInt()-1; break;
+					case Mineral.Io: Io += b.toInt()-1; break;
+					case Mineral.Fr: Fr += b.toInt()-1; break;
 				}
-			} else if(m == 0)
+			} else if(m == 3)
 				first2Bases = "";
 			else first2Bases += b.toChar();
 			

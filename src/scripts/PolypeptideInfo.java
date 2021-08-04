@@ -28,8 +28,8 @@ public class PolypeptideInfo {
 	private int p11; // PD_	Fr	temperature zone seeker
 	
 	// Dissolution
-	private int p12; // ND_	Cr	short range versatile dissolver
-	private int p13; // NP_	Cr	wide range specialized dissolver
+	private int p12; // ND_	Cr	short range dissolver
+	private int p13; // NP_	Cr	wide range dissolver
 	
 	// Regulation
 	private int p14; // DN_	Nc	heater
@@ -87,18 +87,6 @@ public class PolypeptideInfo {
 	public double getThreatLevel() {
 		if(p04 == 0) return 0; 
 		return (p12+4*p13) * Math.log(acidCount);
-	}
-	
-	public double getPreyVision() {
-		return Math.sqrt(p04)*40;
-	}
-	
-	public double getPredatorVision() {
-		return Math.sqrt(p05)*41;
-	}
-	
-	public double getResourceVision() {
-		return Math.sqrt(p06)*45;
 	}
 	
 }

@@ -4,9 +4,11 @@ import java.util.LinkedList;
 
 public class Spore {
 
-	public static final int INCUBATION_TIME = 3800;
+	public static final int INCUBATION_TIME = 2800;
+	public static final int INCUBATION_TIME_LONG = 19600;
 	
-	private static final double MAX_VELOCITY = 1.0;
+	private static final double MAX_SPEED = 1.0;
+	private static final double LONG_INCUBATION_CHANCE = 0.18;
 	private static final double DECELERATION = 0.99;
 	
 	private Genome genome;
@@ -16,24 +18,31 @@ public class Spore {
 	private Point position;
 	private Vector velocity;
 	private boolean inMotion;
+	private boolean longIncubation;
 	
-	private int age;
+	private double age;
 	private int incubationTime;
 	
-	// TODO can do: short+quick | long+quick | short+durable | long+durable
-	// durable means there is a chance of creating a spore that has much longer incubation time
-	
-	public Spore(Genome genome, int energy, Point position) {
+	public Spore(Genome genome, int energy, Point position, boolean far, boolean longIncubation) {
 		this.genome = genome;
 		this.energy = energy;
 		this.position = position;
 		
 		this.radius = Math.max(Math.sqrt(genome.length()/20.0), 1);
 		this.age = 0;
-		this.incubationTime = INCUBATION_TIME;
 		
-		double xRand = Math.random()*MAX_VELOCITY*2-MAX_VELOCITY;
-		double yRand = Math.random()*MAX_VELOCITY*2-MAX_VELOCITY;
+		if(longIncubation && Math.random() < LONG_INCUBATION_CHANCE) {
+			this.incubationTime = INCUBATION_TIME_LONG;
+			this.longIncubation = true;
+					
+		} else {
+			this.incubationTime = INCUBATION_TIME;
+			this.longIncubation = false;
+		}
+		
+		double speed = far ? MAX_SPEED*4 : MAX_SPEED;
+		double xRand = Math.random()*speed*2-speed;
+		double yRand = Math.random()*speed*2-speed;
 		this.velocity = new Vector(xRand, yRand);
 		this.inMotion = true;
 	}
@@ -54,8 +63,12 @@ public class Spore {
 		return genome;
 	}
 	
+	public boolean longIncubation() {
+		return longIncubation;
+	}
+	
 	public int getAge() {
-		return age;
+		return (int) age;
 	}
 	
 	public void update(LinkedList<Spore> sporeRemoveList, LinkedList<Protein> proteins, int width, int height, long prevUpdateTime) {

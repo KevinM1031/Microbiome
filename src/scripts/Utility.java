@@ -31,7 +31,7 @@ public class Utility {
 	
 	public static double tempModPA(double temp) {
 		return (temp >= Environment.BASE_TEMPTERATURE) ?
-				Math.pow(temp / Environment.BASE_TEMPTERATURE, 30) :
-				Math.pow((temp - 2*Environment.BASE_TEMPTERATURE) / Environment.BASE_TEMPTERATURE, 30);
+				Math.pow(temp / Environment.BASE_TEMPTERATURE, 16) :
+				Math.pow((temp - 2*Environment.BASE_TEMPTERATURE) / Environment.BASE_TEMPTERATURE, 16);
 	}
 }

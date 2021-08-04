@@ -49,13 +49,17 @@ public class Protein {
 	private final double preyVision;
 	private final double resourceVision;
 	
+	// Energy
+	private int energySpent;
+	private int huntingEnergy;
+	private int heatingEnergy;
+	private int prevEnergy;
+	private int currEnergy;
+	
 	private double mass;
 	private Storage storage;
 	private Genome genome;
-	private int energySpent;
-	private int energyGeneration;
 	private int sporeCount;
-	private int huntingEnergy;
 	private double addTemp;
 	private double threatReduction;
 	private double preferredTemp;
@@ -77,30 +81,50 @@ public class Protein {
 		this.persistence = MAX_PERSISTENCE;
 		this.fatigue = MAX_FATIGUE;
 		
-		this.energyGeneration = 0;
 		this.speed = 0;
 		this.huntingEnergy = 0;
+		this.heatingEnergy = 0;
+		this.prevEnergy = this.currEnergy = energy;
 		this.preferredTemp = Environment.BASE_TEMPTERATURE;
 		this.addTemp = 0;
 		this.threatReduction = 0;
+		int countAN = 0, countAA = 0, countAD = 0;
 		double maxDist = 0, currDist = 0;
 		for(AminoAcid acid : acids) {
 			acid.checkActivity();
 			
-			if(acid.typeEquals("PA") && acid.isActive())
-				this.energyGeneration += AminoAcid.PA_ENERGY;
-			else if(acid.typeEquals("ND"))
-				this.huntingEnergy += AminoAcid.ND_ENERGY;
+			if(acid.typeEquals("ND"))
+				this.huntingEnergy += AminoAcid.ND_ENERGY*acid.getTier();
+			
 			else if(acid.typeEquals("NP"))
-				this.huntingEnergy += AminoAcid.NP_ENERGY;
-			else if(acid.typeEquals("DN"))
-				addTemp += AminoAcid.DN_TEMPERATURE;
-			else if(acid.typeEquals("DD"))
-				addTemp += AminoAcid.DD_TEMPERATURE;
-			else if(acid.typeEquals("PD"))
-				preferredTemp += AminoAcid.PD_TEMPERATURE;
-			else if(acid.typeEquals("DP"))
-				threatReduction -= AminoAcid.DP_REDUCTION;
+				this.huntingEnergy += AminoAcid.NP_ENERGY*acid.getTier();
+			
+			else if(acid.typeEquals("DN")) {
+				addTemp += AminoAcid.DN_TEMPERATURE*acid.getTier();
+				heatingEnergy += AminoAcid.DN_ENERGY*acid.getTier();
+				
+			} else if(acid.typeEquals("DD"))
+				addTemp += AminoAcid.DD_TEMPERATURE*acid.getTier();
+			
+			else if(acid.typeEquals("PD")) {
+				switch(acid.getTier()) {
+					case 1: preferredTemp += AminoAcid.PD_TEMPERATURE; break;
+					case 2: preferredTemp += AminoAcid.PD_TEMPERATURE*2; break;
+					case 3: preferredTemp -= AminoAcid.PD_TEMPERATURE; break;
+					case 4: preferredTemp -= AminoAcid.PD_TEMPERATURE*2; break;
+				}
+			
+			} else if(acid.typeEquals("DP"))
+				threatReduction += AminoAcid.DP_REDUCTION*acid.getTier();
+			
+			else if(acid.typeEquals("AN"))
+				countAN += acid.getTier();
+			
+			else if(acid.typeEquals("AA"))
+				countAA += acid.getTier();
+			
+			else if(acid.typeEquals("AD"))
+				countAD += acid.getTier();
 			
 			this.speed += acid.getSpeed();
 			currDist = acid.getPosition().distanceTo(position);
@@ -108,16 +132,16 @@ public class Protein {
 		}
 		this.radius = maxDist + AminoAcid.TRUE_RADIUS;
 		
+		this.preyVision = Math.sqrt(countAN)*AminoAcid.AN_RADIUS;
+		this.predatorVision = Math.sqrt(countAA)*AminoAcid.AA_RADIUS;
+		this.resourceVision = Math.sqrt(countAD)*AminoAcid.AD_RADIUS;
+		
 		this.storage = new Storage(energy, 0, 0, 0, 0, 0, 0, 0, 0, 0, (int) Math.pow(info.length(), 2)*AminoAcid.ENERGY_STORAGE,
 				info.length()*AminoAcid.BASE_STORAGE, info.length()*AminoAcid.MINERAL_STORAGE, info.length()*AminoAcid.FR_STORAGE);
 		
-		this.predatorVision = info.getPredatorVision();
-		this.preyVision = info.getPreyVision();
-		this.resourceVision = info.getResourceVision();
-		
 		this.mass = (storage.getPh()+storage.getCr()+storage.getNc()+storage.getIo())/4.0 + storage.getFr()/8.0 + info.length();
 		this.addTemp /= mass;
-		this.temperature = Environment.getTemperature(position) + addTemp;
+		this.temperature = Environment.getTemperature(position, Microbiome.HEIGHT) + addTemp;
 		this.energySpent = 0;
 		this.sporeCount = 0;
 	}
@@ -257,7 +281,7 @@ public class Protein {
 	}
 	
 	public int getEnergyUsage() {
-		return (int) (Utility.tempMod(temperature) * (energySpent*Math.pow(Utility.tempMod(temperature), 3) - energyGeneration));
+		return prevEnergy - currEnergy;
 	}
 	
 	public double getMass() {
@@ -317,12 +341,14 @@ public class Protein {
 	public void update(LinkedList<Protein> proteins, LinkedList<Protein> proteinRemoveList, 
 			LinkedList<Resource> resources, LinkedList<Resource> resourceRemoveList, int width, int height, long prevUpdateTime) {
 		
-		temperature = Environment.getTemperature(position) + addTemp;
+		prevEnergy = currEnergy;
+		
+		temperature = Environment.getTemperature(position, width) + addTemp;
 		double timeElapsed = (System.currentTimeMillis()-prevUpdateTime)/Microbiome.timeSpeed + 1;
 		double tempMod = Utility.tempMod(temperature);
-		double modifier = timeElapsed * tempMod;
+		double modifier = timeElapsed;
 		
-		energySpent = (int) (Math.pow(speed/10, 2)*mass) + info.length();
+		energySpent = (int) (Math.pow(speed/10, 2)*mass + mass + heatingEnergy);
 		
 		if(isHunting())
 			energySpent += huntingEnergy;
@@ -413,6 +439,7 @@ public class Protein {
 		velocity.rotate(rotation);
 		move(width, height, velocity);
 		
+		currEnergy = storage.getEnergy();
 		age += timeElapsed;
 	}
 	
@@ -469,7 +496,7 @@ public class Protein {
 	}
 	
 	private boolean isPrey(Protein p) {
-		return p.getPerceivedThreatLevel() < info.getThreatLevel()*0.75 && 
+		return !p.equals(this) && p.getPerceivedThreatLevel() < info.getThreatLevel()*0.75 && 
 				(p.getStorage().getEnergy() > storage.getMaxEnergy()/20.0 || storage.getEnergy() < storage.getMaxEnergy()/5.0);
 	}
 	

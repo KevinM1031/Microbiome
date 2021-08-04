@@ -26,7 +26,7 @@ public class Resource {
 	
 	private int age;
 	
-	public Resource(Point position, int type, int amount, int width, int height, double speed) {
+	public Resource(Point position, int type, int amount, Vector velocity) {
 		
 		this.radius = calcRadius();
 		
@@ -37,13 +37,15 @@ public class Resource {
 		
 		this.className = initClassName(type);
 		this.variantName = initVariantName(type);
-		
-		double xRand = Math.random()*speed*2-speed;
-		double yRand = Math.random()*speed*2-speed;
-		this.velocity = new Vector(xRand, yRand);
+
+		this.velocity = velocity;
 		this.inMotion = true;
 		
 		this.age = (int) (Math.random()*MAX_INIT_AGE);
+	}
+	
+	public Resource(Point position, int type, int amount, double speed) {
+		this(position, type, amount, new Vector(Math.random()*speed*2-speed, Math.random()*speed*2-speed));
 	}
 	
 	public Point getPosition() {
@@ -103,7 +105,7 @@ public class Resource {
 			velocity.multY(Math.pow(DECELERATION, timeElapsed));
 			position.add(velocity, timeElapsed);
 			
-			if(velocity.x < 0.01 && velocity.y < 0.01)
+			if(Math.abs(velocity.x) < 0.01 && Math.abs(velocity.y) < 0.01)
 				inMotion = false;
 			
 			if(position.x < radius) {
@@ -131,10 +133,10 @@ public class Resource {
 	
 	private double calcRadius() {
 		if(type == ENERGY)
-			return Math.sqrt(MIN_RADIUS*amount/50000000.0);
+			return Math.max(1, Math.sqrt(MIN_RADIUS*amount/50000000.0));
 		if(type == Base.N || type == Base.A || type == Base.D || type == Base.P)
-			return Math.sqrt(MIN_RADIUS*amount/8.0);
-		else return Math.sqrt(MIN_RADIUS*amount/3.0);
+			return Math.max(1, Math.sqrt(MIN_RADIUS*amount/8.0));
+		else return Math.max(1, Math.sqrt(MIN_RADIUS*amount/3.0));
 	}
 	
 	private Color initColor(int type) {

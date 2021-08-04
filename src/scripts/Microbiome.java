@@ -5,7 +5,7 @@ public class Microbiome {
 	private static final String TITLE = "SkyTime";
 	private final static boolean RUNNING = true;
 	
-	public static final int WIDTH = 1500, HEIGHT = 1000;
+	public static final int WIDTH = 1900, HEIGHT = 1000;
 	public static final long seed = 123456789;
 	public static final long FPS = 80;
 	public static final long delayInMS = 1000/FPS;

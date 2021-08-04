@@ -55,16 +55,6 @@ public class Base {
 		}
 	}
 	
-	public boolean toBool() {
-		switch(type) {
-			case N: return true;
-			case A: return true;
-			case D: return false;
-			case P: return false;
-			default: return false;
-		}
-	}
-	
 	public char toChar() {
 		switch(type) {
 			case N: return 'N';

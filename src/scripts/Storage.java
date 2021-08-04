@@ -176,52 +176,52 @@ public class Storage {
 		
 		if(energyStored > 0) {
 			p = new Point(position.x, position.y);
-			resources.add(new Resource(p, Resource.ENERGY, energyStored, width, height, SPILL_SPEED));
+			resources.add(new Resource(p, Resource.ENERGY, energyStored, SPILL_SPEED));
 		}
 		
 		if(nStored > 0 && resources.size() < Microbiome.MAX_RESOURCES) {
 			p = new Point(position.x, position.y);
-			resources.add(new Resource(p, Base.N, nStored, width, height, SPILL_SPEED));
+			resources.add(new Resource(p, Base.N, nStored, SPILL_SPEED));
 		}
 
 		if(aStored > 0 && resources.size() < Microbiome.MAX_RESOURCES) {
 			p = new Point(position.x, position.y);
-			resources.add(new Resource(p, Base.A, aStored, width, height, SPILL_SPEED));
+			resources.add(new Resource(p, Base.A, aStored, SPILL_SPEED));
 		}
 	
 		if(dStored > 0 && resources.size() < Microbiome.MAX_RESOURCES) {
 			p = new Point(position.x, position.y);
-			resources.add(new Resource(p, Base.D, dStored, width, height, SPILL_SPEED));
+			resources.add(new Resource(p, Base.D, dStored, SPILL_SPEED));
 		}
 	
 		if(pStored > 0 && resources.size() < Microbiome.MAX_RESOURCES) {
 			p = new Point(position.x, position.y);
-			resources.add(new Resource(p, Base.P, pStored, width, height, SPILL_SPEED));
+			resources.add(new Resource(p, Base.P, pStored, SPILL_SPEED));
 		}
 	
 		if(phStored > 0 && resources.size() < Microbiome.MAX_RESOURCES) {
 			p = new Point(position.x, position.y);
-			resources.add(new Resource(p, Mineral.Ph, phStored, width, height, SPILL_SPEED));
+			resources.add(new Resource(p, Mineral.Ph, phStored, SPILL_SPEED));
 		}
 	
 		if(crStored > 0 && resources.size() < Microbiome.MAX_RESOURCES) {
 			p = new Point(position.x, position.y);
-			resources.add(new Resource(p, Mineral.Cr, crStored, width, height, SPILL_SPEED));
+			resources.add(new Resource(p, Mineral.Cr, crStored, SPILL_SPEED));
 		}
 	
 		if(ncStored > 0 && resources.size() < Microbiome.MAX_RESOURCES) {
 			p = new Point(position.x, position.y);
-			resources.add(new Resource(p, Mineral.Nc, ncStored, width, height, SPILL_SPEED));
+			resources.add(new Resource(p, Mineral.Nc, ncStored, SPILL_SPEED));
 		}
 	
 		if(ioStored > 0 && resources.size() < Microbiome.MAX_RESOURCES) {
 			p = new Point(position.x, position.y);
-			resources.add(new Resource(p, Mineral.Io, ioStored, width, height, SPILL_SPEED));
+			resources.add(new Resource(p, Mineral.Io, ioStored, SPILL_SPEED));
 		}
 	
 		if(frStored > 0 && resources.size() < Microbiome.MAX_RESOURCES) {
 			p = new Point(position.x, position.y);
-			resources.add(new Resource(p, Mineral.Fr, frStored, width, height, SPILL_SPEED));
+			resources.add(new Resource(p, Mineral.Fr, frStored, SPILL_SPEED));
 		}
 	}
 	
@@ -455,10 +455,6 @@ public class Storage {
 		return energyStored;
 	}
 	
-	public int getMaxEnergy() {
-		return maxEnergyStorage;
-	}
-	
 	public int getN() {
 		return nStored;
 	}
@@ -493,6 +489,24 @@ public class Storage {
 	
 	public int getFr() {
 		return frStored;
+	}
+	
+	///////////////////////////////////
+	
+	public int getMaxEnergy() {
+		return maxEnergyStorage;
+	}
+	
+	public int getMaxBase() {
+		return maxBaseStorage;
+	}
+
+	public int getMaxMineral() {
+		return maxMineralStorage;
+	}
+	
+	public int getMaxFr() {
+		return maxFrStorage;
 	}
 	
 	///////////////////////////////////
