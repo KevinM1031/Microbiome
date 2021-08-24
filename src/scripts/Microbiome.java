@@ -1,11 +1,15 @@
 package scripts;
 
+import java.awt.Toolkit;
+import java.util.function.Consumer;
+
 public class Microbiome {
 
 	private static final String TITLE = "SkyTime";
 	private final static boolean RUNNING = true;
 	
-	public static final int WIDTH = 1900, HEIGHT = 1000;
+	public static final int WIDTH = Toolkit.getDefaultToolkit().getScreenSize().width;
+	public static final int HEIGHT = Toolkit.getDefaultToolkit().getScreenSize().height;
 	public static final long seed = 123456789;
 	public static final long FPS = 80;
 	public static final long delayInMS = 1000/FPS;
@@ -15,7 +19,7 @@ public class Microbiome {
 	public static final int MAX_SPORES = 10000;
 	public static final int MAX_PROTEINS = 10000;
 	
-	public static void main(String[] args) {
+	public static void main(String[] args) {		
 		defaultDriver();
 	}
 	
@@ -44,4 +48,19 @@ public class Microbiome {
 			}
 		}
 	}
+}
+
+class Main {
+
+    static void asdf() {
+        final Consumer<Integer> simpleReference = Main::someMethod;
+        simpleReference.accept(1);
+
+        final Consumer<Integer> another = i -> System.out.println(i);
+        another.accept(2);
+    }
+
+    private static void someMethod(int value) {
+        System.out.println(value);
+    }
 }

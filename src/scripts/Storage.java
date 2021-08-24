@@ -170,8 +170,6 @@ public class Storage {
 	
 	public void spill(Point position, double radius, LinkedList<Resource> resources, int width, int height) {
 		
-		double xRand;
-		double yRand;
 		Point p;
 		
 		if(energyStored > 0) {

@@ -2,9 +2,9 @@ package scripts;
 
 public class Environment {
 	
-	public static final long RADIATION = 10;
+	public static final long RADIATION = 3;
 	public static final double BASE_TEMPTERATURE = 293.15;
-	public static int MAX_LIGHT = 1000;
+	public static final int MAX_LIGHT = 700;
 	
 	public static int remainingLight = MAX_LIGHT;
 	

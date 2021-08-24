@@ -1,9 +1,15 @@
 package scripts;
 
+import java.awt.Graphics;
+
 public class Utility {
 
-	public static boolean pointRectCollision(Point p, double x, double y, double w, double h) {
-		return p.x < x || p.x > w || p.y < y || p.y > h;
+	public static boolean pointRectCollision(Point p, double x1, double y1, double x2, double y2) {
+		return p.x < x1 || p.x > x2 || p.y < y1 || p.y > y2;
+	}
+	
+	public static boolean pointRectInclusion(Point p, double x, double y, double w, double h) {
+		return p.x >= x && p.x <= x+w && p.y >= y && p.y <= y+h;
 	}
 	
 	public static boolean circleRectCollision(Point p, double r, double x, double y, double w, double h) {
@@ -33,5 +39,16 @@ public class Utility {
 		return (temp >= Environment.BASE_TEMPTERATURE) ?
 				Math.pow(temp / Environment.BASE_TEMPTERATURE, 16) :
 				Math.pow((temp - 2*Environment.BASE_TEMPTERATURE) / Environment.BASE_TEMPTERATURE, 16);
+	}
+	
+	public static void drawCenteredString(Graphics G, String str, double x, double y, double w, double h) {
+		x += w/2 - G.getFontMetrics().stringWidth(str)/2;
+		y += h/2 + (G.getFontMetrics().getAscent()-G.getFontMetrics().getDescent())/2;
+		G.drawString(str, (int)x, (int)y);
+	}
+	
+	public static void drawString(Graphics G, String str, double x, double y, double w, double h) {
+		y += h/2 + (G.getFontMetrics().getAscent()-G.getFontMetrics().getDescent())/2;
+		G.drawString(str, (int)x, (int)y);
 	}
 }

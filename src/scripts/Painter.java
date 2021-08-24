@@ -2,11 +2,11 @@
 package scripts;
 
 import java.awt.Color;
+import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.util.LinkedList;
-import java.util.Queue;
 
 import javax.swing.JPanel;
 
@@ -22,10 +22,12 @@ public class Painter extends JPanel {
 	
 	private Object selectedObject;
 	
-	private MouseControl mouse;
+	private InputControl inputCtrl;
 	
 	private boolean showGeneralStats;
 	private boolean keepObjectSelected;
+	
+	private UISet UISystem;
 	
 	private long prevUpdateTime;
 	
@@ -34,8 +36,11 @@ public class Painter extends JPanel {
 	
 	public Painter(int width, int height) {
 		setSize(width, height);
-		mouse = new MouseControl();
-		addMouseListener(mouse);
+		inputCtrl = new InputControl();
+		addMouseListener(inputCtrl);
+		addKeyListener(inputCtrl);
+		setFocusable(true);
+		requestFocus();
 		
 		proteins = new LinkedList<Protein>();
 		spores = new LinkedList<Spore>();
@@ -43,7 +48,7 @@ public class Painter extends JPanel {
 		
 		// lower rank predator
 		for(int i = 0; i < 10; i++) {
-			String gene3 = "PPNN AAPP ANPP ANPP ADAN NDNP NDNP ANPN NDNP ANPN NNPN NANP NNPN NANP AAPP";
+			String gene3 = "PPNN AAPP ANPP ANPP ADAN NDNP NDNP ANPN NDNP ANPN NNPN NANP NNNN NANP AAPP";
 			Genome genome3 = new Genome(gene3);
 			Protein protein3 = new Protein(new Point(Math.random()*(getWidth()-1.0), Math.random()*(getHeight()/2.0)), 0, genome3, 500000);
 			proteins.add(protein3);
@@ -58,7 +63,7 @@ public class Painter extends JPanel {
 		}
 		
 		// photosynthesizer
-		for(int i = 0; i < 50; i++) {
+		for(int i = 0; i < 100; i++) {
 			String gene3 = "PAPN PAPP PAPP PAPP PAPP PAPP PPDP";
 			Genome genome3 = new Genome(gene3);
 			Protein protein3 = new Protein(new Point(Math.random()*(getWidth()-1.0), Math.random()*(getHeight()/2.0)), 0, genome3, 200000);
@@ -66,7 +71,7 @@ public class Painter extends JPanel {
 		}
 		
 		// upper rank predator
-		String gene2 = "PPAN ANPP ANPP NNNN NNNN DNNN NDNP ANPN NNNN NNNN NNNN NPNP NNNN NNNN NNNN NPNP NDNP ADAP ADNN NNAN NAPP ANPN ANPP ANNN ANPN NAAN ADPN NNAN NAAP NNAN NAAP ANPD";
+		String gene2 = "PPPN ANPP ANPP NNNN NNNN DNNN NDNP ANPN NNNN NNNN NNNN NPNP NNNN NNNN NNNN NPNP NDNP ADAP ADNN NNAN NAPP ANPN ANPP ANNN ANPN NAAN ADPN NNAN NAPP NNAN NAPP ANPD";
 		Genome genome2 = new Genome(gene2);
 		Protein protein2 = new Protein(new Point(Math.random()*(getWidth()-1.0), Math.random()*(getHeight()/2.0)), 0, genome2, 4000000);
 		proteins.add(protein2);
@@ -74,13 +79,16 @@ public class Painter extends JPanel {
 		// trapper
 		String gene3 = "PPPN DPPP DPPP ADAP APPP NPPN DDAP ANAN NPPP NPPP";
 		Genome genome3 = new Genome(gene3);
-		Protein protein3 = new Protein(new Point(773, 460), 0, genome3, 4000000);
+		Protein protein3 = new Protein(new Point(Math.random()*(getWidth()-1.0), Math.random()*(getHeight()-1.0)), 0, genome3, 4000000);
 		proteins.add(protein3);
+		Genome genome4 = new Genome(gene3);
+		Protein protein4 = new Protein(new Point(Math.random()*(getWidth()-1.0), Math.random()*(getHeight()-1.0)), 0, genome4, 4000000);
+		proteins.add(protein4);
 		
 		mineralVents = new LinkedList<MineralVent>();
 		
 		for(int i = 0; i < 3; i++) {
-			int x = (int) (Math.random()*(getWidth()-1600) + 1500);
+			int x = (int) (Math.random()*(getWidth()-200)+100);
 			double s = Math.random() + 1;
 			mineralVents.add(new MineralVent(x, getHeight(), 10/s, s, 50));
 		}
@@ -92,15 +100,17 @@ public class Painter extends JPanel {
 		x = 0;
 		y = 0;
 		
+		UISystem = new UISet(new Point(10, 10), inputCtrl);
+		
 		prevUpdateTime = System.currentTimeMillis();
 	}
 	
 	@Override
 	public void paintComponent(Graphics G) {
 		
-		G.setColor(Color.cyan);
-		G.drawLine((int) (5.0/22.0*getWidth()), 0, (int) (5.0/22.0*getWidth()), getHeight());
-		G.drawLine((int) (15.0/22.0*getWidth()), 0, (int) (15.0/22.0*getWidth()), getHeight());
+		if(inputCtrl.terminateRequested()) System.exit(0);
+		
+		G.setFont(new Font("Monospaced", Font.PLAIN, 12));
 		
 		((Graphics2D) G).setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 		
@@ -108,7 +118,7 @@ public class Painter extends JPanel {
 		LinkedList<Spore> sporeRemoveList = new LinkedList<Spore>();
 		LinkedList<Resource> resourceRemoveList = new LinkedList<Resource>();
 		
-		if(mouse.leftPressed()) keepObjectSelected = !keepObjectSelected;
+		if(inputCtrl.leftPressed()) keepObjectSelected = !keepObjectSelected;
 		if(!keepObjectSelected) selectedObject = null;
 		
 		// Protein auras and counting acids
@@ -174,10 +184,13 @@ public class Painter extends JPanel {
 		else if(selectedObject != null && selectedObject instanceof Resource) drawResourceStats((Resource)selectedObject, G);
 		else keepObjectSelected = false;
 		
-		if(mouse.rightPressed())
+		if(inputCtrl.rightPressed())
 			showGeneralStats = !showGeneralStats;
 		if(showGeneralStats) drawGeneralStats(G);
 		
+//		UISystem.update(mousePosition(), inputCtrl.leftPressed());
+//		UISystem.draw(G);
+				
 		// Removing outdated objects
 		for(Protein protein : proteinRemoveList) {
 			if(protein.equals(selectedObject))
@@ -198,7 +211,7 @@ public class Painter extends JPanel {
 		}
 
 		Environment.resetLight();
-		mouse.update();
+		inputCtrl.update();
 		prevUpdateTime = System.currentTimeMillis();
 	}
 	
@@ -300,6 +313,6 @@ public class Painter extends JPanel {
 	}
 	
 	private Point mousePosition() {
-		return new Point(mouse.position().x - x, mouse.position().y - y);
+		return new Point(inputCtrl.position().x - x, inputCtrl.position().y - y);
 	}
 }

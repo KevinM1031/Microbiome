@@ -1,6 +1,5 @@
 package scripts;
 
-import java.awt.Color;
 import java.util.LinkedList;
 
 public class Protein {
