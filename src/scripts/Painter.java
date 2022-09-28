@@ -10,9 +10,30 @@ import java.util.LinkedList;
 
 import javax.swing.JPanel;
 
+import scripts.data.ConfigDataIO;
+import scripts.data.Sample;
+import scripts.data.SampleDataIO;
+import scripts.data.SaveDataIO;
+import scripts.objects.AminoAcid;
+import scripts.objects.Environment;
+import scripts.objects.Genome;
+import scripts.objects.MineralVent;
+import scripts.objects.Protein;
+import scripts.objects.Resource;
+import scripts.objects.Spore;
+import scripts.slots.Slot;
+import scripts.ui.InputControl;
+import scripts.ui.UI;
+import scripts.ui.UISet;
+import scripts.util.Point;
+import scripts.util.Utility;
+import scripts.util.Vector;
+
 public class Painter extends JPanel {
 
 	private static final long serialVersionUID = 1L;
+	
+	public static final Color PURPLE = new Color(127, 0, 255);
 	
 	private LinkedList<Protein> proteins;
 	private LinkedList<Spore> spores;
@@ -26,10 +47,12 @@ public class Painter extends JPanel {
 	
 	private boolean showGeneralStats;
 	private boolean keepObjectSelected;
+	private double prevObjSize;
 	
 	private UISet UISystem;
 	
 	private long prevUpdateTime;
+	private long prevAutoSaveTime;
 	
 	protected int x;
 	protected int y;
@@ -41,11 +64,18 @@ public class Painter extends JPanel {
 		addKeyListener(inputCtrl);
 		setFocusable(true);
 		requestFocus();
+		setBackground(Color.getHSBColor(0, 0, ConfigDataIO.background_brightness/100f));
 		
 		proteins = new LinkedList<Protein>();
 		spores = new LinkedList<Spore>();
 		resources = new LinkedList<Resource>();
+		mineralVents = new LinkedList<MineralVent>();
 		
+		ConfigDataIO.loadConfig();
+		SampleDataIO.loadSamples();
+		SaveDataIO.loadSave(proteins, spores, resources, mineralVents, getHeight());
+		
+		/*
 		// lower rank predator
 		for(int i = 0; i < 10; i++) {
 			String gene3 = "PPNN AAPP ANPP ANPP ADAN NDNP NDNP ANPN NDNP ANPN NNPN NANP NNNN NANP AAPP";
@@ -85,33 +115,35 @@ public class Painter extends JPanel {
 		Protein protein4 = new Protein(new Point(Math.random()*(getWidth()-1.0), Math.random()*(getHeight()-1.0)), 0, genome4, 4000000);
 		proteins.add(protein4);
 		
-		mineralVents = new LinkedList<MineralVent>();
-		
 		for(int i = 0; i < 3; i++) {
 			int x = (int) (Math.random()*(getWidth()-200)+100);
 			double s = Math.random() + 1;
 			mineralVents.add(new MineralVent(x, getHeight(), 10/s, s, 50));
 		}
+		*/
 		
 		selectedObject = null;
 		showGeneralStats = false;
 		keepObjectSelected = false;
+		prevObjSize = ConfigDataIO.object_radius;
 		
 		x = 0;
 		y = 0;
 		
-		UISystem = new UISet(new Point(10, 10), inputCtrl);
+		UISystem = new UISet(new Point((getWidth()-UI.BORDER_SIZE-Slot.WIDTH)/2, 80), inputCtrl, getWidth(), getHeight(),
+				proteins, spores, resources, mineralVents);
 		
 		prevUpdateTime = System.currentTimeMillis();
+		prevAutoSaveTime = prevUpdateTime;
 	}
 	
 	@Override
 	public void paintComponent(Graphics G) {
-		
 		if(inputCtrl.terminateRequested()) System.exit(0);
 		
+		setBackground(Color.getHSBColor(0, 0, ConfigDataIO.background_brightness/100f));
+		super.paintComponent(G);
 		G.setFont(new Font("Monospaced", Font.PLAIN, 12));
-		
 		((Graphics2D) G).setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 		
 		LinkedList<Protein> proteinRemoveList = new LinkedList<Protein>();
@@ -121,29 +153,101 @@ public class Painter extends JPanel {
 		if(inputCtrl.leftPressed()) keepObjectSelected = !keepObjectSelected;
 		if(!keepObjectSelected) selectedObject = null;
 		
-		// Protein auras and counting acids
+		// Auto save
+		if (ConfigDataIO.auto_save != 0 && prevUpdateTime > prevAutoSaveTime + Math.pow(10, ConfigDataIO.auto_save-1)*1000) {
+			SaveDataIO.updateSave(proteins, spores, resources, mineralVents);
+			prevAutoSaveTime = prevUpdateTime;
+		}
+		
+		// Scheduled insert
+		if (Microbiome.SIM_RUNNING) {
+			for (Sample s : SampleDataIO.samples) {
+				if (s.schedules[SaveDataIO.getIndex()-1] > 0 && 
+						s.prevScheduledSpawnTime + s.schedules[SaveDataIO.getIndex()-1]*1000 < prevUpdateTime) {
+					s.prevScheduledSpawnTime = prevUpdateTime;
+					Genome genome = new Genome(s.genome);
+					Protein protein = new Protein(new Point(Math.random()*(getWidth()-1.0), Math.random()*(getHeight()/2.0)), 0, genome, 200000);
+					proteins.addFirst(protein);
+				}
+			}
+		}
+		
+		// Drawing grid lines
+		if (ConfigDataIO.grid_lines >= 1) {
+			G.setColor(Color.getHSBColor(0, 0, ConfigDataIO.background_brightness/100f
+					+ ((ConfigDataIO.background_brightness > 50) ? -0.15f : +0.15f)));
+			
+			if (ConfigDataIO.grid_lines == 1) {
+				for (int i = 0; i <= getWidth()/50; i++)
+					G.drawLine(50*i, 0, 50*i, getHeight());
+				for (int i = 0; i <= getHeight()/50; i++)
+					G.drawLine(0, 50*i, getWidth(), 50*i);
+				
+			} else {
+				for (int i = 0; i <= getWidth()/50; i++) {
+					G.drawLine(50*i, 0, 50*i, getHeight());
+					G.drawString(50*i+"", 50*i+1, 10);
+				}
+				for (int i = 0; i <= getHeight()/50; i++) {
+					G.drawLine(0, 50*i, getWidth(), 50*i);
+					G.drawString(50*i+"", 1, 50*i+10);
+				}
+			}
+		}
+			
+		// Drawing temperature displays
+		if (ConfigDataIO.temperature_display >= 1) {
+			G.setColor(Color.getHSBColor(0, 0, ConfigDataIO.background_brightness/100f
+					+ ((ConfigDataIO.background_brightness > 50) ? -0.3f : +0.30f)));
+			int iter = (ConfigDataIO.temperature_display == 1) ? 5 : 15;
+			for (int i = 0; i < iter; i++) {
+				double x = getWidth()*((1+i)/(1.0+iter));
+				Utility.drawCenteredString(G, (int)(Environment.getTemperature(x, getWidth())*100)/100.0 + " °K", x, getHeight()+1);
+			}
+		}
+		
+		// Drawing sunlight level displays
+		if (ConfigDataIO.sunlight_display >= 1) {
+			G.setColor(Color.getHSBColor(0, 0, ConfigDataIO.background_brightness/100f
+					+ ((ConfigDataIO.background_brightness > 50) ? -0.3f : +0.30f)));
+			int iter = (ConfigDataIO.sunlight_display == 1) ? 5 : 15;
+			
+			for (int i = 0; i < iter; i++) {
+				double y = getHeight()*((1+i)/(1.0+iter));
+				String str = (int)(Environment.getBrightness(y, getHeight())*100)/100.0 + " lm*";
+				G.drawString(str, getWidth()-G.getFontMetrics().stringWidth(str), (int)y);
+			}
+		}
+		
+		// Drawing protein auras and counting acids
 		for(Protein protein : proteins) {
 			for(AminoAcid acid : protein.getAcids()) {
 				if(protein.isHunting() && acid.typeEquals("ND"))
-					fillAura((int) acid.getPosition().x, (int) acid.getPosition().y, (int) acid.getNDRadius(), new Color(255, 127, 0, 31), G);
+					fillAura((int) acid.getPosition().x, (int) acid.getPosition().y, (int) acid.getNDRadius(), AminoAcid.AURA_COLOR_ND, G);
 				else if(protein.isHunting() && acid.typeEquals("NP"))
-					fillAura((int) acid.getPosition().x, (int) acid.getPosition().y, (int) acid.getNPRadius(), new Color(255, 0, 63, 63), G);
+					fillAura((int) acid.getPosition().x, (int) acid.getPosition().y, (int) acid.getNPRadius(), AminoAcid.AURA_COLOR_NP, G);
 				else if(protein.isGathering() && acid.typeEquals("AP"))
-					fillAura((int) acid.getPosition().x, (int) acid.getPosition().y, (int) acid.getAPRadius(), new Color(255, 255, 0, 63), G);
+					fillAura((int) acid.getPosition().x, (int) acid.getPosition().y, (int) acid.getAPRadius(), AminoAcid.AURA_COLOR_AP, G);
 				
 				else if(acid.typeEquals("PA"))
 					Environment.useLight();
 			}
 		}
 		
+		// Updating mineral vents
 		for(MineralVent mineralVent : mineralVents) {
-			mineralVent.update(resources, getWidth(), getHeight(), prevUpdateTime);
+			if (Microbiome.SIM_RUNNING) 
+				mineralVent.update(resources, getWidth(), getHeight(), prevUpdateTime);
 		}
 		
 		// Updating resources and drawing them
 		for(Resource resource : resources) {
-			resource.update(resourceRemoveList, getWidth(), getHeight(), prevUpdateTime);
-			drawCircle((int) resource.getPosition().x, (int) resource.getPosition().y, (int) resource.getRadius(), resource.getColor(), G);
+			if (Microbiome.SIM_RUNNING) 
+				resource.update(resourceRemoveList, getWidth(), getHeight(), prevUpdateTime);
+			drawCircle((int) resource.getPosition().x, (int) resource.getPosition().y, (int) resource.getRadius(), 
+					new Color(resource.getColor().getRed(), resource.getColor().getGreen(), resource.getColor().getBlue(), 
+					(int) (ConfigDataIO.resource_opacity/100.0*255)),
+					G);
 			
 			if((selectedObject != null && resource.equals(selectedObject)) || (selectedObject == null && 
 					Utility.pointCircleCollision(mousePosition(), resource.getRadius()+1, resource.getPosition().x, resource.getPosition().y)))
@@ -154,15 +258,22 @@ public class Painter extends JPanel {
 		for(Protein protein : proteins) {
 			if(!protein.isAlive()) continue;
 			for(AminoAcid acid : protein.getAcids()) {
-				acid.update(proteins, proteinRemoveList, spores, resources, resourceRemoveList, getWidth(), getHeight(), prevUpdateTime);
-				fillCircle((int) acid.getPosition().x, (int) acid.getPosition().y, AminoAcid.RADIUS, acid.getColor(), G);
+				if (Microbiome.SIM_RUNNING)
+					acid.update(proteins, proteinRemoveList, spores, resources, resourceRemoveList, getWidth(), getHeight(), prevUpdateTime);
+				fillCircle((int) acid.getPosition().x, (int) acid.getPosition().y, AminoAcid.RADIUS, 
+						new Color(acid.getColor().getRed(), acid.getColor().getGreen(), acid.getColor().getBlue(), 
+								(int) (ConfigDataIO.protein_opacity/100.0*255)), 
+						G);
 			}
 		}
 		
 		// Updating each spore and drawing them
 		for(Spore spore : spores) {
-			spore.update(sporeRemoveList, proteins, getWidth(), getHeight(), prevUpdateTime);
-			Color c = spore.longIncubation() ? new Color(127, 0, 255) : Color.orange;
+			if (Microbiome.SIM_RUNNING)
+				spore.update(sporeRemoveList, proteins, getWidth(), getHeight(), prevUpdateTime);
+			Color c = spore.longIncubation() ? 
+					new Color(127, 0, 255, (int) (ConfigDataIO.protein_opacity/100.0*255)) :
+					new Color(255, 127, 0, (int) (ConfigDataIO.protein_opacity/100.0*255));
 			fillCircle((int) spore.getPosition().x, (int) spore.getPosition().y, (int) spore.getRadius(), c, G);
 			
 			if((selectedObject != null && spore.equals(selectedObject)) || (selectedObject == null && 
@@ -172,24 +283,51 @@ public class Painter extends JPanel {
 		
 		// Updating each protein
 		for(Protein protein : proteins) {
-			protein.update(proteins, proteinRemoveList, resources, resourceRemoveList, getWidth(), getHeight(), prevUpdateTime);
+			if (Microbiome.SIM_RUNNING)
+				protein.update(proteins, proteinRemoveList, resources, resourceRemoveList, getWidth(), getHeight(), prevUpdateTime);
 			
 			if((selectedObject != null && protein.equals(selectedObject)) || (selectedObject == null && 
 					Utility.pointCircleCollision(mousePosition(), protein.getRadius(), protein.getPosition().x, protein.getPosition().y)))
 				selectedObject = protein;
 		}
 		
+		// Drawing object info display texts
 		if(selectedObject != null && selectedObject instanceof Protein) drawProteinStats((Protein)selectedObject, G);
 		else if(selectedObject != null && selectedObject instanceof Spore) drawSporeStats((Spore)selectedObject, G);
 		else if(selectedObject != null && selectedObject instanceof Resource) drawResourceStats((Resource)selectedObject, G);
 		else keepObjectSelected = false;
 		
+		// Drawing FPS display texts
+		if (ConfigDataIO.show_fps) {
+			G.setColor(UI.COLOR_PRIMARY);
+			String fpsStr = Microbiome.actual_FPS + " FPS (max " + Microbiome.FPS + ")";
+			G.drawString(fpsStr, getWidth()-G.getFontMetrics().stringWidth(fpsStr)-10, 20);
+		}
+		
+		// Drawing general stats
 		if(inputCtrl.rightPressed())
 			showGeneralStats = !showGeneralStats;
 		if(showGeneralStats) drawGeneralStats(G);
 		
-//		UISystem.update(mousePosition(), inputCtrl.leftPressed());
-//		UISystem.draw(G);
+		UISystem.update(mousePosition(), inputCtrl.leftPressed());
+		UISystem.draw(G);
+		
+		// Re-translating proteins if object sizes have changed
+		for(Protein protein : proteins) {
+			if (prevObjSize != ConfigDataIO.object_radius) {
+				
+				protein.getAcids().clear();
+				protein.setInfo(protein.getGenome().translate(protein, protein.getAcids()));
+				
+				double currDist = 0, maxDist = 0;
+				for(AminoAcid acid : protein.getAcids()) {
+					acid.checkActivity();
+					currDist = acid.getPosition().distanceTo(protein.getPosition());
+					maxDist = (currDist <= maxDist) ? maxDist : currDist;
+				}
+				protein.setRadius(maxDist + AminoAcid.TRUE_RADIUS);
+			}
+		} prevObjSize = ConfigDataIO.object_radius;
 				
 		// Removing outdated objects
 		for(Protein protein : proteinRemoveList) {
@@ -212,7 +350,8 @@ public class Painter extends JPanel {
 
 		Environment.resetLight();
 		inputCtrl.update();
-		prevUpdateTime = System.currentTimeMillis();
+		inputCtrl.clearInput();
+		if (Microbiome.SIM_RUNNING) prevUpdateTime = System.currentTimeMillis();
 	}
 	
 	private void drawCircle(int x, int y, int r, Color c, Graphics G) {
@@ -221,14 +360,10 @@ public class Painter extends JPanel {
 	}
 	
 	private void fillCircle(int x, int y, int r, Color c, Graphics G) {
-		double darknessMult = 0.4;
-		G.setColor(new Color(
-				(int)Math.max(c.getRed()*darknessMult, 0), 
-				(int)Math.max(c.getGreen()*darknessMult, 0), 
-				(int)Math.max(c.getBlue()*darknessMult, 0), 127));
-		G.fillOval(x-r-AminoAcid.BORDER, y-r-AminoAcid.BORDER, (r+AminoAcid.BORDER)*2, (r+AminoAcid.BORDER)*2);
+		G.setColor(Color.getHSBColor(0, 0, ConfigDataIO.protein_outline_brightness/100f));
+		G.drawOval(x-r-1, y-r-1, r*2+2, r*2+2);
 		G.setColor(c);
-		G.fillOval(x-r, y-r, r*2, r*2);
+		G.fillOval(x-r, y-r, r*2+1, r*2+1);
 	}
 	
 	private void fillAura(int x, int y, int r, Color c, Graphics G) {
@@ -237,79 +372,116 @@ public class Painter extends JPanel {
 	}
 	
 	private void drawProteinStats(Protein protein, Graphics G) {
-		G.setColor(Color.MAGENTA);
+		G.setColor(UI.COLOR_PRIMARY);
 		G.drawString("PROTEIN ORGANISM", 10, 20);
 		
 		G.drawString("[Gene] " + protein.getGenome().getSequence(), 10, 45);
 		G.drawString("[Generation] " + "#" + protein.getGeneration(), 10, 60);
-		G.drawString("[Threat Level] " + (int)(protein.getInfo().getThreatLevel()*100)/100.0 + 
-				" (" + (int)(protein.getPerceivedThreatLevel()*100)/100.0 + ")", 10, 75);
-		G.drawString("[Mass] " + protein.getMass() + " n", 10, 90);
-		G.drawString("[Speed] " + (int)(protein.getSpeed()*100)/100.0 + " p/t", 10, 105);
-		
-		G.drawString("[Age] " + protein.getAge() + " t", 10, 130);
-		G.drawString("[Energy] " + protein.getStorage().getEnergy() + " / " + protein.getStorage().getMaxEnergy() + " J", 10, 145);
-		G.drawString("[Energy Usage] " + protein.getEnergyUsage() + " J/t", 10, 160);
-		G.drawString("[Temperature] " + (int)(protein.getTemperature()*100)/100.0 + " (" + (int)(protein.getPreferredTemp()*100)/100.0 + "±5) K", 10, 175);
-		G.drawString("[Spores Dispersed] " + protein.getSporeCount(), 10, 190);
-		
-		G.drawString("[Mutation History] " + protein.getGenome().getMutationHistory(), 10, 215);
-		G.drawString("[Status] " + protein.getState(), 10, 230);
-		
-		G.drawString("[N Stored] " + protein.getStorage().getN() + " / " + protein.getStorage().getMaxBase(), 10, 260);
-		G.drawString("[A Stored] " + protein.getStorage().getA() + " / " + protein.getStorage().getMaxBase(), 10, 275);
-		G.drawString("[D Stored] " + protein.getStorage().getD() + " / " + protein.getStorage().getMaxBase(), 10, 290);
-		G.drawString("[P Stored] " + protein.getStorage().getP() + " / " + protein.getStorage().getMaxBase(), 10, 305);
-		G.drawString("[Ph Stored] " + protein.getStorage().getPh() + " / " + protein.getStorage().getMaxMineral(), 10, 330);
-		G.drawString("[Cr Stored] " + protein.getStorage().getCr() + " / " + protein.getStorage().getMaxMineral(), 10, 345);
-		G.drawString("[Nc Stored] " + protein.getStorage().getNc() + " / " + protein.getStorage().getMaxMineral(), 10, 360);
-		G.drawString("[Io Stored] " + protein.getStorage().getIo() + " / " + protein.getStorage().getMaxMineral(), 10, 375);
-		G.drawString("[Fr Stored] " + protein.getStorage().getFr() + " / " + protein.getStorage().getMaxFr(), 10, 390);
+		G.drawString("[Position] (" + (int)(protein.getPosition().x*100)/100.0 + ", " + (int)(protein.getPosition().y*100)/100.0 + ")", 10, 75);
+		G.drawString("[Radius] " + (int)(protein.getRadius()*100)/100.0 + " px", 10, 90);
+		G.drawString("[Mass] " + protein.getMass() + " n", 10, 105);
+		G.drawString("[Speed] " + (int)(protein.getSpeed()/protein.getMass()*100)/100.0 + " p/t (" + 
+				(int)(protein.getSpeed()*100)/100.0 + " p/t at m=1) ×" +
+				(int)(protein.getSpeedAmplifier()*100)/100.0 + " p/t", 10, 120);
 		
 		drawCircle((int) protein.getPosition().x, (int) protein.getPosition().y, (int) protein.getRadius(), Color.MAGENTA, G);
+		
+		if (ConfigDataIO.object_info_detail < 1) return;
+		G.setColor(UI.COLOR_PRIMARY);
+		G.drawString("[Age] " + protein.getAge() + " t", 10, 145);
+		G.drawString("[Energy] " + protein.getStorage().getEnergy() + " / " + protein.getStorage().getMaxEnergy() + " nJ", 10, 160);
+		G.drawString("[Energy Usage] " + protein.getEnergyUsage() + " nJ/t", 10, 175);
+		G.drawString("[Temperature] " + (int)(protein.getTemperature()*100)/100.0 + " (preferred: " + (int)(protein.getPreferredTemp()*100)/100.0 + "±5) °K", 10, 190);
+		G.drawString("[Spores Dispersed] " + protein.getSporeCount(), 10, 205);
+		G.drawString("[Threat Level] " + (int)(protein.getInfo().getThreatLevel()*100)/100.0 + 
+				" (perceived as " + (int)(protein.getPerceivedThreatLevel()*100)/100.0 + ")", 10, 220);
+		G.drawString("[Buoyancy] " + (int)(protein.getBuoyancy()*100)/100.0, 10, 235);
+		G.drawString("[Reproductive Efficiency] " + (int)(protein.getInfo().getPPCount()/9.0*10000)/100.0 + " %", 10, 250);
+		
+		G.drawString("[Mutation History] " + protein.getGenome().getMutationHistory(), 10, 275);
+		G.drawString("[Status] " + protein.getState(), 10, 290);
+		
+		drawProteinRanges(protein, G);
+		
+		if (ConfigDataIO.object_info_detail < 2) return;
+		G.setColor(UI.COLOR_SECONDARY);
+		G.drawString("[N Stored] " + protein.getStorage().getN() + " / " + protein.getStorage().getMaxBase(), 10, 315);
+		G.drawString("[A Stored] " + protein.getStorage().getA() + " / " + protein.getStorage().getMaxBase(), 10, 330);
+		G.drawString("[D Stored] " + protein.getStorage().getD() + " / " + protein.getStorage().getMaxBase(), 10, 345);
+		G.drawString("[P Stored] " + protein.getStorage().getP() + " / " + protein.getStorage().getMaxBase(), 10, 360);
+		G.drawString("[Ph Stored] " + protein.getStorage().getPh() + " / " + protein.getStorage().getMaxMineral(), 10, 385);
+		G.drawString("[Cr Stored] " + protein.getStorage().getCr() + " / " + protein.getStorage().getMaxMineral(), 10, 400);
+		G.drawString("[Nc Stored] " + protein.getStorage().getNc() + " / " + protein.getStorage().getMaxMineral(), 10, 415);
+		G.drawString("[Io Stored] " + protein.getStorage().getIo() + " / " + protein.getStorage().getMaxMineral(), 10, 430);
+		G.drawString("[Fr Stored] " + protein.getStorage().getFr() + " / " + protein.getStorage().getMaxFr(), 10, 445);
+		
+		drawProteinDirection(protein, G);
+	}
+	
+	private void drawProteinRanges(Protein protein, Graphics G) {		
 		drawCircle((int) protein.getPosition().x, (int) protein.getPosition().y, (int) protein.getPreyVision(), Color.RED, G);
 		drawCircle((int) protein.getPosition().x, (int) protein.getPosition().y, (int) protein.getPredatorVision(), Color.GREEN, G);
 		drawCircle((int) protein.getPosition().x, (int) protein.getPosition().y, (int) protein.getResourceVision(), Color.ORANGE, G);
 		drawCircle((int) protein.getPosition().x, (int) protein.getPosition().y, Protein.INTERACTION_RADIUS, Color.LIGHT_GRAY, G);
 	}
 	
+	private void drawProteinDirection(Protein protein, Graphics G) {
+		G.setColor(Color.GREEN);
+		Vector v = protein.getVelocity();
+		v.setMagnitude(50);
+		G.drawLine((int)protein.getPosition().x, (int)protein.getPosition().y, 
+				(int)(protein.getPosition().x + v.x), (int)(protein.getPosition().y + v.y));
+		G.setColor(Color.RED);
+		v.rotate(protein.getRotationGoal()-protein.getRotation());
+		G.drawLine((int)protein.getPosition().x, (int)protein.getPosition().y, 
+				(int)(protein.getPosition().x + v.x), (int)(protein.getPosition().y + v.y));
+	}
+	
 	private void drawSporeStats(Spore spore, Graphics G) {
-		G.setColor(Color.MAGENTA);
-		G.drawString("SPORE", 10, 20);
+		G.setColor(UI.COLOR_PRIMARY);
+		G.drawString("SPORE" + (spore.longIncubation() ? " (OOCYST)" : ""), 10, 20);
 		
 		G.drawString("[Gene] " + spore.getGenome().getSequence(), 10, 45);
 		G.drawString("[Generation] " + "#" + spore.getGenome().getGeneration(), 10, 60);
+		G.drawString("[Position] (" + (int)(spore.getPosition().x*100)/100.0 + ", " + (int)(spore.getPosition().y*100)/100.0 + ")", 10, 75);
+		G.drawString("[Radius] " + (int)(spore.getRadius()*100)/100.0 + " px", 10, 90);
 
-		G.drawString("[Age] " + spore.getAge() + " / " + (spore.longIncubation() ? Spore.INCUBATION_TIME_LONG : Spore.INCUBATION_TIME), 10, 85);
+		if (ConfigDataIO.object_info_detail < 1) return;
+		G.drawString("[Age] " + spore.getAge() + " / " + (spore.longIncubation() ? Spore.INCUBATION_TIME_LONG : Spore.INCUBATION_TIME), 10, 115);
 		
-		G.drawString("[Mutation History] " + spore.getGenome().getMutationHistory(), 10, 110);
+		G.drawString("[Mutation History] " + spore.getGenome().getMutationHistory(), 10, 130);
 		
 		drawCircle((int) spore.getPosition().x, (int) spore.getPosition().y, (int) spore.getRadius()*4, Color.MAGENTA, G);
 	}
 	
 	private void drawResourceStats(Resource resource, Graphics G) {
-		G.setColor(Color.MAGENTA);
+		G.setColor(UI.COLOR_PRIMARY);
 		G.drawString("RESOURCE", 10, 20);
 		
 		G.drawString("[Class] " + resource.getClassName(), 10, 45);
 		G.drawString("[Variant] " + resource.getVariantName(), 10, 60);
+		G.drawString("[Position] (" + (int)(resource.getPosition().x*100)/100.0 + ", " + (int)(resource.getPosition().y*100)/100.0 + ")", 10, 75);
+		G.drawString("[Radius] " + (int)(resource.getRadius()*100)/100.0 + " px", 10, 90);
 		
-		G.drawString("[Amount] " + resource.getAmount(), 10, 85);
-		G.drawString("[Age] " + resource.getAge() + " / " + Resource.MAX_AGE, 10, 100);
+		G.drawString("[Amount] " + resource.getAmount(), 10, 115);
+		G.drawString("[Age] " + resource.getAge() + " / " + Resource.MAX_AGE, 10, 130);
 		
 		drawCircle((int) resource.getPosition().x, (int) resource.getPosition().y, (int) resource.getRadius()*2, Color.MAGENTA, G);
 	}
 	
 	private void drawGeneralStats(Graphics G) {
-		G.setColor(Color.getHSBColor(0.55f, 1f, 1f));
-		String str = "[Proteins] " + proteins.size() + " / " + Microbiome.MAX_PROTEINS;
-		G.drawString(str, getWidth()-G.getFontMetrics().stringWidth(str)-10, 20);
+		G.setColor(UI.COLOR_SECONDARY);
+		String str = "[Proteins] " + proteins.size() + " / " + ConfigDataIO.proteins_limit;
+		G.drawString(str, getWidth()-G.getFontMetrics().stringWidth(str)-10, ConfigDataIO.show_fps ? 45 : 20);
 		
-		str = "[Spores] " + spores.size() + " / " + Microbiome.MAX_SPORES;
-		G.drawString(str, getWidth()-G.getFontMetrics().stringWidth(str)-10, 35);
+		str = "[Spores] " + spores.size() + " / " + ConfigDataIO.spores_limit;
+		G.drawString(str, getWidth()-G.getFontMetrics().stringWidth(str)-10, ConfigDataIO.show_fps ? 60 : 35);
 		
-		str = "[Resources] " + resources.size() + " / " + Microbiome.MAX_RESOURCES;
-		G.drawString(str, getWidth()-G.getFontMetrics().stringWidth(str)-10, 50);
+		str = "[Resources] " + resources.size() + " / " + ConfigDataIO.resources_limit;
+		G.drawString(str, getWidth()-G.getFontMetrics().stringWidth(str)-10, ConfigDataIO.show_fps ? 75 : 50);
+		
+		str = "[Remaining Sunlight] " + Environment.remainingLight + " / " + SaveDataIO.sunlight + " lm*";
+		G.drawString(str, getWidth()-G.getFontMetrics().stringWidth(str)-10, ConfigDataIO.show_fps ? 100 : 75);
 	}
 	
 	private Point mousePosition() {

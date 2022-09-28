@@ -11,15 +11,20 @@ public class Microbiome {
 	public static final int WIDTH = Toolkit.getDefaultToolkit().getScreenSize().width;
 	public static final int HEIGHT = Toolkit.getDefaultToolkit().getScreenSize().height;
 	public static final long seed = 123456789;
-	public static final long FPS = 80;
-	public static final long delayInMS = 1000/FPS;
-	public static final double timeSpeed = 12;
 	
-	public static final int MAX_RESOURCES = 200;
-	public static final int MAX_SPORES = 10000;
-	public static final int MAX_PROTEINS = 10000;
+	public static final double DEFAULT_TIMESPEED = 12;
+	public static final double TIMESPEED_1 = 6;
+	public static final double TIMESPEED_2 = 3;
+	public static final double TIMESPEED_3 = 1.5;
 	
-	public static void main(String[] args) {		
+	public static int FPS = 80;
+	public static int delayInMS = 1000/FPS;
+	public static int actual_FPS = 0;
+	
+	public static double timeSpeed = DEFAULT_TIMESPEED;
+	public static boolean SIM_RUNNING = true;
+	
+	public static void main(String[] args) {
 		defaultDriver();
 	}
 	
@@ -37,6 +42,7 @@ public class Microbiome {
 			if(System.currentTimeMillis()-t2 >= 1000) {
 				System.out.println("[SYSTEM] FPS: " + updateCount 
 						+ " (optimal: " + FPS + ")");
+				actual_FPS = (int) updateCount;
 				updateCount = 0;
 				t2 = System.currentTimeMillis();
 			}
@@ -48,19 +54,9 @@ public class Microbiome {
 			}
 		}
 	}
-}
-
-class Main {
-
-    static void asdf() {
-        final Consumer<Integer> simpleReference = Main::someMethod;
-        simpleReference.accept(1);
-
-        final Consumer<Integer> another = i -> System.out.println(i);
-        another.accept(2);
-    }
-
-    private static void someMethod(int value) {
-        System.out.println(value);
-    }
+	
+	public static void setFPS(int newFPS) {
+		FPS = newFPS;
+		delayInMS = 1000/FPS;
+	}
 }
