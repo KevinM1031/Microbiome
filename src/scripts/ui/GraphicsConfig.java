@@ -14,23 +14,23 @@ public class GraphicsConfig {
 		
 		// SLOT 1
 		UIEvent<Returner<String>> event11 = new UIEvent<Returner<String>>(GraphicsConfigUIFunc::slot1_Func1, "Brightness");
-		Slot slot1 = new InputSlot(event11, ConfigDataIO.background_brightness+"", "", "%", inputCtrl);
+		Slot slot1 = new InputSlot(event11, ConfigDataIO.background_brightness+"", "", " %", inputCtrl);
 		
 		// SLOT 2
 		UIEvent<Returner<String>> event21 = new UIEvent<Returner<String>>(GraphicsConfigUIFunc::slot2_Func1, "UI Opacity");
-		Slot slot2 = new InputSlot(event21, ConfigDataIO.UI_opacity+"", "", "%", inputCtrl);
+		Slot slot2 = new InputSlot(event21, ConfigDataIO.UI_opacity+"", "", " %", inputCtrl);
 		
 		// SLOT 3
 		UIEvent<Returner<String>> event31 = new UIEvent<Returner<String>>(GraphicsConfigUIFunc::slot3_Func1, "Object Opacity");
-		Slot slot3 = new InputSlot(event31, ConfigDataIO.protein_opacity+"", "", "%", inputCtrl);
+		Slot slot3 = new InputSlot(event31, ConfigDataIO.protein_opacity+"", "", " %", inputCtrl);
 		
 		// SLOT 4
 		UIEvent<Returner<String>> event41 = new UIEvent<Returner<String>>(GraphicsConfigUIFunc::slot4_Func1, "Outline Brightness");
-		Slot slot4 = new InputSlot(event41, ConfigDataIO.protein_outline_brightness+"", "", "%", inputCtrl);
+		Slot slot4 = new InputSlot(event41, ConfigDataIO.protein_outline_brightness+"", "", " %", inputCtrl);
 		
 		// SLOT 5
 		UIEvent<Returner<String>> event51 = new UIEvent<Returner<String>>(GraphicsConfigUIFunc::slot5_Func1, "Resource Opacity");
-		Slot slot5 = new InputSlot(event51, ConfigDataIO.resource_opacity+"", "", "%", inputCtrl);
+		Slot slot5 = new InputSlot(event51, ConfigDataIO.resource_opacity+"", "", " %", inputCtrl);
 		
 		// SUMMARY
 		ArrayList<Slot> slots = new ArrayList<Slot>();
