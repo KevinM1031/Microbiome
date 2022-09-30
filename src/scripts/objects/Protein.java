@@ -30,6 +30,7 @@ public class Protein {
 	private static final int GATHERING = 5003;
 	private static final int ESCAPING = 5004;
 	private static final int RETURNING = 5005;
+	private static final int WANDERING = 5006;
 	
 	private LinkedList<AminoAcid> acids;
 
@@ -75,6 +76,7 @@ public class Protein {
 	
 	public Protein(Point position, double rotation, Genome genome, int energy,
 			int n, int a, int d, int p, int ph, int cr, int nc, int io, int fr, int age, int sporeCount) {
+				
 		this.age = age;
 		this.nextActionAge = 0;
 		this.acids = new LinkedList<AminoAcid>();
@@ -128,10 +130,15 @@ public class Protein {
 					case 4: preferredTemp -= SaveDataIO.PD_temperature*2; break;
 				}
 			
-			} else if(acid.typeEquals("DP"))
-				threatReduction += SaveDataIO.DP_reduction*acid.getTier();
+			} else if(acid.typeEquals("DP")) {
+				switch(acid.getTier()) {
+				case 1: threatReduction += SaveDataIO.DP_reduction; break;
+				case 2: threatReduction += SaveDataIO.DP_reduction*2; break;
+				case 3: threatReduction -= SaveDataIO.DP_reduction; break;
+				case 4: threatReduction -= SaveDataIO.DP_reduction*2; break;
+			}
 			
-			else if(acid.typeEquals("AN"))
+			} else if(acid.typeEquals("AN"))
 				countAN += acid.getTier();
 			
 			else if(acid.typeEquals("AA"))
@@ -365,14 +372,23 @@ public class Protein {
 	}
 	
 	public String getState() {
+		String str = "Unknown";
 		switch(state) {
-			case IDLE: return "Idle";
-			case HUNTING: return "Hunting";
-			case GATHERING: return "Gathering";
-			case ESCAPING: return "Escaping";
-			case RETURNING: return "Returning";
-			default: return "Unknown";
+			case IDLE: str = "Idle"; break;
+			case HUNTING: str = "Hunting"; break;
+			case GATHERING: str = "Gathering"; break;
+			case ESCAPING: str = "Escaping"; break;
+			case RETURNING: str = "Returning"; break;
+			case WANDERING: str = "Wandering"; break;
 		}
+		
+		if (storage.getEnergy() < storage.getMaxEnergy()*SaveDataIO.starvation_threshold)
+			str += " (starving)";
+		
+		if (willIgnoreTemp())
+			str += " (ignoring temperature)";
+		
+		return str;
 	}
 	
 	public void kill(LinkedList<Protein> proteinRemoveList, LinkedList<Resource> resources, int width, int height) {
@@ -445,12 +461,12 @@ public class Protein {
 				persistence--;
 				
 			// Returning to higher temperature
-			} else if(temperature+PREFERRED_TEMP_RANGE < preferredTemp && !willIgnoreTemp()) {
+			} else if(speed > 0 && temperature+PREFERRED_TEMP_RANGE < preferredTemp && !willIgnoreTemp()) {
 				state = RETURNING;
 				rotationGoal = Environment.higherTempDirection();
 				
 			// Returning to lower temperature
-			} else if(temperature-PREFERRED_TEMP_RANGE > preferredTemp && !willIgnoreTemp()) {
+			} else if(speed > 0 && temperature-PREFERRED_TEMP_RANGE > preferredTemp && !willIgnoreTemp()) {
 				state = RETURNING;
 				rotationGoal = Environment.lowerTempDirection();
 			
@@ -478,15 +494,18 @@ public class Protein {
 				fatigue--;
 				if(fatigue == 0) persistence = MAX_PERSISTENCE;
 			} else if(persistence == 0) fatigue = MAX_FATIGUE;
+			
+		} else {
+			state = IDLE;
 		}
-		
+				
 		double rotationSpeed = (persistence < MAX_PERSISTENCE) ? MAX_ROTATION_SPEED : ROTATION_SPEED;
 		rotationSpeed *= modifier;
 		
 		double radians = (rotationGoal - rotation) % (Math.PI*2.0);
 		if(radians > Math.PI) radians -= Math.PI*2.0; 
 		else if(radians < -Math.PI) radians += Math.PI*2.0;
-		radians = (Math.abs(radians) > rotationSpeed/10) ? radians*rotationSpeed : radians;
+		radians = radians * Math.min(1, rotationSpeed);
 		if (Math.abs(radians) > 0.0001) rotate(width, height, radians);
 				
 		// applying buoyancy
@@ -553,15 +572,17 @@ public class Protein {
 	}
 	
 	private boolean isPredator(Protein p) {
-		return p.getPerceivedThreatLevel() > info.getThreatLevel()*1.25;
+		return !equals(p) && p.getPerceivedThreatLevel() > info.getThreatLevel()*SaveDataIO.predator_threat_level;
 	}
 	
 	private boolean isPrey(Protein p) {
-		return !p.equals(this) && p.getPerceivedThreatLevel() < info.getThreatLevel()*0.75 && 
-				(p.getStorage().getEnergy() > storage.getMaxEnergy()/20.0 || storage.getEnergy() < storage.getMaxEnergy()/5.0);
+		return !equals(p) && p.getPerceivedThreatLevel() < info.getThreatLevel()*SaveDataIO.prey_threat_level && 
+				(p.getStorage().getEnergy() > storage.getMaxEnergy()*SaveDataIO.starvation_threshold || 
+						storage.getEnergy() < storage.getMaxEnergy()*SaveDataIO.prey_min_energy);
 	}
 	
 	private boolean willIgnoreTemp() {
-		return storage.getEnergy() > storage.getMaxEnergy()*0.75 || storage.getEnergy() < storage.getMaxEnergy()*0.25;
+		return storage.getEnergy() > storage.getMaxEnergy()*SaveDataIO.ignore_temperature_upper_bound || 
+				storage.getEnergy() < storage.getMaxEnergy()*SaveDataIO.ignore_temperature_lower_bound;
 	}
 }

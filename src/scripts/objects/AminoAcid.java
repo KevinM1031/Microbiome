@@ -105,24 +105,24 @@ public class AminoAcid {
 			if(typeEquals("PA")) {
 				protein.getStorage().addEnergy((int) (SaveDataIO.PA_energy*modifier*Environment.getBrightness(position, height)));
 				
-				if(Math.random()*timeElapsed*prodTempMod < SaveDataIO.PA_N)
+				if(Math.random()/timeElapsed*prodTempMod < SaveDataIO.PA_N)
 					protein.getStorage().addN(tier);
-				if(Math.random()*timeElapsed*prodTempMod < SaveDataIO.PA_A)
+				if(Math.random()/timeElapsed*prodTempMod < SaveDataIO.PA_A)
 					protein.getStorage().addA(tier);
-				if(Math.random()*timeElapsed*prodTempMod < SaveDataIO.PA_D)
+				if(Math.random()/timeElapsed*prodTempMod < SaveDataIO.PA_D)
 					protein.getStorage().addD(tier);
-				if(Math.random()*timeElapsed*prodTempMod < SaveDataIO.PA_P)
+				if(Math.random()/timeElapsed*prodTempMod < SaveDataIO.PA_P)
 					protein.getStorage().addP(tier);
 				
-				if(Math.random()*timeElapsed*prodTempMod < SaveDataIO.PA_Ph)
+				if(Math.random()/timeElapsed*prodTempMod < SaveDataIO.PA_Ph)
 					protein.getStorage().addPh(tier);
-				if(Math.random()*timeElapsed*prodTempMod < SaveDataIO.PA_Cr)
+				if(Math.random()/timeElapsed*prodTempMod < SaveDataIO.PA_Cr)
 					protein.getStorage().addCr(tier);
-				if(Math.random()*timeElapsed*prodTempMod < SaveDataIO.PA_Nc)
+				if(Math.random()/timeElapsed*prodTempMod < SaveDataIO.PA_Nc)
 					protein.getStorage().addNc(tier);
-				if(Math.random()*timeElapsed*prodTempMod < SaveDataIO.PA_Io)
+				if(Math.random()/timeElapsed*prodTempMod < SaveDataIO.PA_Io)
 					protein.getStorage().addIo(tier);
-				if(Math.random()*timeElapsed*prodTempMod < SaveDataIO.PA_Fr)
+				if(Math.random()/timeElapsed*prodTempMod < SaveDataIO.PA_Fr)
 					protein.getStorage().addFr(tier);
 			}
 			
@@ -132,24 +132,24 @@ public class AminoAcid {
 				
 				protein.getStorage().addEnergy((int) (SaveDataIO.PN_energy*tier));
 								
-				if(Math.random()*timeElapsed*prodTempMod < SaveDataIO.PN_N)
+				if(Math.random()/timeElapsed*prodTempMod < SaveDataIO.PN_N)
 					protein.getStorage().addN(tier);
-				if(Math.random()*timeElapsed*prodTempMod < SaveDataIO.PN_A)
+				if(Math.random()/timeElapsed*prodTempMod < SaveDataIO.PN_A)
 					protein.getStorage().addA(tier);
-				if(Math.random()*timeElapsed*prodTempMod < SaveDataIO.PN_D)
+				if(Math.random()/timeElapsed*prodTempMod < SaveDataIO.PN_D)
 					protein.getStorage().addD(tier);
-				if(Math.random()*timeElapsed*prodTempMod < SaveDataIO.PN_P)
+				if(Math.random()/timeElapsed*prodTempMod < SaveDataIO.PN_P)
 					protein.getStorage().addP(tier);
 				
-				if(Math.random()*timeElapsed*prodTempMod < SaveDataIO.PN_Ph)
+				if(Math.random()/timeElapsed*prodTempMod < SaveDataIO.PN_Ph)
 					protein.getStorage().addPh(tier);
-				if(Math.random()*timeElapsed*prodTempMod < SaveDataIO.PN_Cr)
+				if(Math.random()/timeElapsed*prodTempMod < SaveDataIO.PN_Cr)
 					protein.getStorage().addCr(tier);
-				if(Math.random()*timeElapsed*prodTempMod < SaveDataIO.PN_Nc)
+				if(Math.random()/timeElapsed*prodTempMod < SaveDataIO.PN_Nc)
 					protein.getStorage().addNc(tier);
-				if(Math.random()*timeElapsed*prodTempMod < SaveDataIO.PN_Io)
+				if(Math.random()/timeElapsed*prodTempMod < SaveDataIO.PN_Io)
 					protein.getStorage().addIo(tier);
-				if(Math.random()*timeElapsed*prodTempMod < SaveDataIO.PN_Fr)
+				if(Math.random()/timeElapsed*prodTempMod < SaveDataIO.PN_Fr)
 					protein.getStorage().addFr(tier);
 			}
 			

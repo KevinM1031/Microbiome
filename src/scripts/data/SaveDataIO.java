@@ -5,6 +5,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.LinkedList;
 
+import scripts.objects.Base;
 import scripts.objects.Genome;
 import scripts.objects.Mineral;
 import scripts.objects.MineralVent;
@@ -25,7 +26,7 @@ public class SaveDataIO {
 	public static int sunlight = 2000;
 	public static int sunlight_gradient = 0;
 	
-	public static double PA_energy = 10;
+	public static int PA_energy = 10;
 	public static double PA_N = 0.01;
 	public static double PA_A = 0.01;
 	public static double PA_D = 0.01;
@@ -36,7 +37,7 @@ public class SaveDataIO {
 	public static double PA_Io = 0.001;
 	public static double PA_Fr = 0;
 	
-	public static double PN_energy = 540;
+	public static int PN_energy = 540;
 	public static double PN_N = 0.1;
 	public static double PN_A = 0.1;
 	public static double PN_D = 0.1;
@@ -81,11 +82,19 @@ public class SaveDataIO {
 	public static double AP_radius = 20;
 	public static double DN_temperature = 11;
 	public static int DN_energy = 4;
-	public static double DA_speed = 1;
+	public static double DA_speed = 0.8;
 	public static double DD_buoyancy = 0.15;
 	public static double DD_min_buoyancy = -0.9;
-	public static double DP_reduction = 10;
+	public static double DP_reduction = 3;
 	public static double PD_temperature = 4;
+	
+	public static double predator_threat_level = 1.25;
+	public static double prey_threat_level = 0.75;
+	public static double starvation_threshold = 0.05;
+	public static double prey_min_energy = 0.2;
+	public static double ignore_temperature_upper_bound = 0.75;
+	public static double ignore_temperature_lower_bound = 0.25;
+	
 	
 	private static int index = 1;
 	
@@ -152,7 +161,7 @@ public class SaveDataIO {
 						case 7: region_deletion = Double.parseDouble(str); break;
 						case 8: region_extension = Double.parseDouble(str); break;
 						
-						case 9: PA_energy = Double.parseDouble(str); break;
+						case 9: PA_energy = Integer.parseInt(str); break;
 						case 10: PA_N = Double.parseDouble(str); break;
 						case 11: PA_A = Double.parseDouble(str); break;
 						case 12: PA_D = Double.parseDouble(str); break;
@@ -163,7 +172,7 @@ public class SaveDataIO {
 						case 17: PA_Io = Double.parseDouble(str); break;
 						case 18: PA_Fr = Double.parseDouble(str); break;
 						
-						case 19: PN_energy = Double.parseDouble(str); break;
+						case 19: PN_energy = Integer.parseInt(str); break;
 						case 20: PN_N = Double.parseDouble(str); break;
 						case 21: PN_A = Double.parseDouble(str); break;
 						case 22: PN_D = Double.parseDouble(str); break;
@@ -212,6 +221,14 @@ public class SaveDataIO {
 						case 62: DD_buoyancy = Double.parseDouble(str); break;
 						case 63: DD_min_buoyancy = Double.parseDouble(str); break;
 						case 64: DP_reduction = Double.parseDouble(str); break;
+						case 65: PD_temperature = Double.parseDouble(str); break;
+						
+						case 66: predator_threat_level = Double.parseDouble(str); break;
+						case 67: prey_threat_level = Double.parseDouble(str); break;
+						case 68: starvation_threshold = Double.parseDouble(str); break;
+						case 69: prey_min_energy = Double.parseDouble(str); break;
+						case 70: ignore_temperature_upper_bound = Double.parseDouble(str); break;							
+							
 					}
 					
 					str = "";
@@ -223,7 +240,7 @@ public class SaveDataIO {
 
 			}
 			
-			PD_temperature = Double.parseDouble(str);
+			ignore_temperature_lower_bound = Double.parseDouble(str);
 			
 			reader.close();
 			
@@ -383,7 +400,7 @@ public class SaveDataIO {
 			int raw, i = 0;
 			String str = "";
 			int amount = 0;
-			double x = 0, rate = 0, speed = 0;
+			double x = 0, rate = 0, speed = 0, e=0, n=0, a=0, d=0, p=0, ph=0, cr=0, nc=0, io=0, fr=0;
 			
 			mineralVents.clear();
  
@@ -391,8 +408,8 @@ public class SaveDataIO {
 				char c = (char) raw;
 				
 				if (c == '\n') {
-					amount = Integer.parseInt(str);
-					mineralVents.addFirst(new MineralVent(x, height, rate, speed, amount));
+					fr = Double.parseDouble(str);
+					mineralVents.addFirst(new MineralVent(x, height, rate, speed, amount, e, n, a, d, p, ph, cr, nc, io, fr));
 					i = 0;
 					str = "";
 					
@@ -401,6 +418,16 @@ public class SaveDataIO {
 						case 0: x = Double.parseDouble(str); break;
 						case 1: rate = Double.parseDouble(str); break;
 						case 2: speed = Double.parseDouble(str); break;
+						case 3: amount = Integer.parseInt(str); break;
+						case 4: e = Double.parseDouble(str); break;
+						case 5: n = Double.parseDouble(str); break;
+						case 6: a = Double.parseDouble(str); break;
+						case 7: d = Double.parseDouble(str); break;
+						case 8: p = Double.parseDouble(str); break;
+						case 9: ph = Double.parseDouble(str); break;
+						case 10: cr = Double.parseDouble(str); break;
+						case 11: nc = Double.parseDouble(str); break;
+						case 12: io = Double.parseDouble(str); break;
 					}
 					
 					str = "";
@@ -493,7 +520,12 @@ public class SaveDataIO {
 		// vents
 		saveData = "";
 		for (MineralVent v : mineralVents) {
-			saveData += v.getX() + "|" + v.getRate() + "|" + v.getSpeed() + "|" + v.getAmount() + "\n";
+			saveData += v.getX() + "|" + v.getRate() + "|" + v.getSpeed() + "|" + v.getAmount() + "|" +
+						v.getWeight(Resource.ENERGY) + "|" + v.getWeight(Base.N) + "|" + 
+						v.getWeight(Base.A) + "|" + v.getWeight(Base.D) + "|" + 
+						v.getWeight(Base.P) + "|" + v.getWeight(Mineral.Ph) + "|" + 
+						v.getWeight(Mineral.Cr) + "|" + v.getWeight(Mineral.Nc) + "|" + 
+						v.getWeight(Mineral.Io) + "|" + v.getWeight(Mineral.Fr) + "\n";
 		}
 		try {
 			FileWriter writer = new FileWriter("src/scripts/data/saves/save" + index_ + "/vents.txt");
@@ -538,8 +570,11 @@ public class SaveDataIO {
 	
 				NN_speed + "|" + NA_rotation_speed + "|" + ND_radius + "|" + ND_energy + "|" + NP_radius + "|" + NP_energy + "|" +
 				AN_radius + "|" + AA_radius + "|" + AD_radius + "|" + AP_radius + "|" +
-				DN_temperature + "|" + DN_energy + "|" + DA_speed + "|" + DD_buoyancy + "|" + DD_min_buoyancy + "|" + DP_reduction + "|" +
-				PD_temperature + "\n";
+				DN_temperature + "|" + DN_energy + "|" + DA_speed + "|" + DD_buoyancy + "|" + DD_min_buoyancy + "|" + 
+				DP_reduction + "|" + PD_temperature + "|" +
+		
+				predator_threat_level + "|" + prey_threat_level + "|" + starvation_threshold + "|" + prey_min_energy + "|" +
+				ignore_temperature_upper_bound + "|" + ignore_temperature_lower_bound + "\n";
 		
 		try {
 			FileWriter writer = new FileWriter("src/scripts/data/saves/save" + index_ + "/environment.txt");

@@ -3,7 +3,6 @@ package scripts.util;
 import java.awt.Graphics;
 
 import scripts.data.SaveDataIO;
-import scripts.objects.Environment;
 
 public class Utility {
 

@@ -11,7 +11,7 @@ import scripts.util.Point;
 import scripts.util.Returner;
 
 public class EnvironmentConfig {
-	public static UI getNewEnvironmentConfigUI(Point pos, InputControl inputCtrl, UI addVentUI, UI advancedConfigUI) {
+	public static UI getNewEnvironmentConfigUI(Point pos, InputControl inputCtrl, UI advancedConfigUI) {
 		
 		UI newUI = new UI(pos, "Environment Parameters Configuration");
 		
@@ -46,10 +46,7 @@ public class EnvironmentConfig {
 		Slot slot5 = new LabeledCycleSlot("Sunlight Gradient", events5, SaveDataIO.sunlight_gradient);
 		
 		// SLOT 6
-		Slot slot6 = new LinkSlot(newUI, addVentUI, "Add Mineral Vent");
-		
-		// SLOT 7
-		Slot slot7 = new LinkSlot(newUI, advancedConfigUI, "Advanced Configuration");
+		Slot slot6 = new LinkSlot(newUI, advancedConfigUI, "Advanced Configuration");
 		
 		// SUMMARY
 		ArrayList<Slot> slots = new ArrayList<Slot>();
@@ -59,7 +56,6 @@ public class EnvironmentConfig {
 		slots.add(slot4);
 		slots.add(slot5);
 		slots.add(slot6);
-		slots.add(slot7);
 		newUI.setSlots(slots);
 		
 		return newUI;

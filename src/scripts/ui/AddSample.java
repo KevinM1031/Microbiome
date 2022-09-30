@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import scripts.data.Sample;
 import scripts.data.SampleDataIO;
 import scripts.data.SaveDataIO;
+import scripts.objects.Genome;
 import scripts.slots.ActionSlot;
 import scripts.slots.CycleSlot;
 import scripts.slots.InputSlot;
@@ -57,6 +58,10 @@ class AddSampleUIFunc {
 	}
 	
 	public static void slot3_Func1(int n) {
+		
+		Genome g = new Genome(AddSample.sampleGenome);
+		if (AddSample.sampleName.trim().length() == 0 || g.getSequence().length() == 0) return;
+		
 		int[] emptySchedule = new int[SaveDataIO.MAX_SAVES];
 		for (int i = 0; i < SaveDataIO.MAX_SAVES; i++) emptySchedule[i] = -1;
 		SampleDataIO.samples.add(new Sample(AddSample.sampleName, AddSample.sampleGenome, emptySchedule));

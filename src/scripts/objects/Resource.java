@@ -138,7 +138,7 @@ public class Resource {
 	
 	private double calcRadius() {
 		if(type == ENERGY)
-			return Math.max(1, Math.sqrt(MIN_RADIUS*amount/5000000.0));
+			return Math.max(1, Math.pow(MIN_RADIUS*amount/30.0, 0.2));
 		if(type == Base.N || type == Base.A || type == Base.D || type == Base.P)
 			return Math.max(1, Math.sqrt(MIN_RADIUS*amount/8.0));
 		else return Math.max(1, Math.sqrt(MIN_RADIUS*amount/3.0));

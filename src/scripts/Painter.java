@@ -5,6 +5,7 @@ import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.Polygon;
 import java.awt.RenderingHints;
 import java.util.LinkedList;
 
@@ -15,8 +16,10 @@ import scripts.data.Sample;
 import scripts.data.SampleDataIO;
 import scripts.data.SaveDataIO;
 import scripts.objects.AminoAcid;
+import scripts.objects.Base;
 import scripts.objects.Environment;
 import scripts.objects.Genome;
+import scripts.objects.Mineral;
 import scripts.objects.MineralVent;
 import scripts.objects.Protein;
 import scripts.objects.Resource;
@@ -150,8 +153,7 @@ public class Painter extends JPanel {
 		LinkedList<Spore> sporeRemoveList = new LinkedList<Spore>();
 		LinkedList<Resource> resourceRemoveList = new LinkedList<Resource>();
 		
-		if(inputCtrl.leftPressed()) keepObjectSelected = !keepObjectSelected;
-		if(!keepObjectSelected) selectedObject = null;
+		if(inputCtrl.leftPressed()) selectedObject = null;
 		
 		// Auto save
 		if (ConfigDataIO.auto_save != 0 && prevUpdateTime > prevAutoSaveTime + Math.pow(10, ConfigDataIO.auto_save-1)*1000) {
@@ -166,7 +168,7 @@ public class Painter extends JPanel {
 						s.prevScheduledSpawnTime + s.schedules[SaveDataIO.getIndex()-1]*1000 < prevUpdateTime) {
 					s.prevScheduledSpawnTime = prevUpdateTime;
 					Genome genome = new Genome(s.genome);
-					Protein protein = new Protein(new Point(Math.random()*(getWidth()-1.0), Math.random()*(getHeight()/2.0)), 0, genome, 200000);
+					Protein protein = new Protein(new Point(Math.random()*(getWidth()-1.0), Math.random()*(getHeight()-1.0)), 0, genome, 200000);
 					proteins.addFirst(protein);
 				}
 			}
@@ -214,7 +216,7 @@ public class Painter extends JPanel {
 			
 			for (int i = 0; i < iter; i++) {
 				double y = getHeight()*((1+i)/(1.0+iter));
-				String str = (int)(Environment.getBrightness(y, getHeight())*100)/100.0 + " lm*";
+				String str = (int)(Environment.getBrightness(y, getHeight())*100)/100.0 + " %";
 				G.drawString(str, getWidth()-G.getFontMetrics().stringWidth(str), (int)y);
 			}
 		}
@@ -254,7 +256,7 @@ public class Painter extends JPanel {
 				selectedObject = resource;
 		}
 		
-		// Updating each acid
+		// Updating and drawing each acid
 		for(Protein protein : proteins) {
 			if(!protein.isAlive()) continue;
 			for(AminoAcid acid : protein.getAcids()) {
@@ -291,11 +293,32 @@ public class Painter extends JPanel {
 				selectedObject = protein;
 		}
 		
+		// Drawing mineral vents
+		for(MineralVent mineralVent : mineralVents) {
+			int x = (int) mineralVent.getX();
+			int y = getHeight()-1;
+			int r = mineralVent.getRadius();
+			Polygon poly = new Polygon(new int[] {x-r, x, x+r}, new int[] {y, y-r*2, y}, 3);
+			G.setColor(new Color(255, 0, 102, (int) (ConfigDataIO.protein_opacity/100.0*255)));
+			G.fillPolygon(poly);
+			G.setColor(Color.getHSBColor(0, 0, ConfigDataIO.protein_outline_brightness/100f));
+			G.drawPolygon(poly);
+			
+			if((selectedObject != null && mineralVent.equals(selectedObject)) || (selectedObject == null && 
+					Utility.pointCircleCollision(mousePosition(), mineralVent.getRadius()*1.3333, mineralVent.getX(), getHeight()-mineralVent.getRadius())))
+				selectedObject = mineralVent;
+		}
+				
+		if(inputCtrl.leftPressed()) keepObjectSelected = selectedObject != null;
+		
 		// Drawing object info display texts
-		if(selectedObject != null && selectedObject instanceof Protein) drawProteinStats((Protein)selectedObject, G);
+		if(selectedObject != null && selectedObject instanceof MineralVent) drawVentStats((MineralVent)selectedObject, G);
+		else if(selectedObject != null && selectedObject instanceof Protein) drawProteinStats((Protein)selectedObject, G);
 		else if(selectedObject != null && selectedObject instanceof Spore) drawSporeStats((Spore)selectedObject, G);
 		else if(selectedObject != null && selectedObject instanceof Resource) drawResourceStats((Resource)selectedObject, G);
 		else keepObjectSelected = false;
+		
+		if(!keepObjectSelected) selectedObject = null;
 		
 		// Drawing FPS display texts
 		if (ConfigDataIO.show_fps) {
@@ -371,7 +394,7 @@ public class Painter extends JPanel {
 		G.fillOval(x-r, y-r, r*2, r*2);
 	}
 	
-	private void drawProteinStats(Protein protein, Graphics G) {
+	private void drawProteinStats(Protein protein, Graphics G) {		
 		G.setColor(UI.COLOR_PRIMARY);
 		G.drawString("PROTEIN ORGANISM", 10, 20);
 		
@@ -380,15 +403,15 @@ public class Painter extends JPanel {
 		G.drawString("[Position] (" + (int)(protein.getPosition().x*100)/100.0 + ", " + (int)(protein.getPosition().y*100)/100.0 + ")", 10, 75);
 		G.drawString("[Radius] " + (int)(protein.getRadius()*100)/100.0 + " px", 10, 90);
 		G.drawString("[Mass] " + protein.getMass() + " n", 10, 105);
-		G.drawString("[Speed] " + (int)(protein.getSpeed()/protein.getMass()*100)/100.0 + " p/t (" + 
-				(int)(protein.getSpeed()*100)/100.0 + " p/t at m=1) ×" +
-				(int)(protein.getSpeedAmplifier()*100)/100.0 + " p/t", 10, 120);
+		G.drawString("[Speed] " + (int)(protein.getSpeed()/protein.getMass()*100)/100.0 + " px/t (" + 
+				(int)(protein.getSpeed()*100)/100.0 + " px/t at m=1) ×" +
+				(int)(protein.getSpeedAmplifier()*100)/100.0 + " px/t", 10, 120);
 		
 		drawCircle((int) protein.getPosition().x, (int) protein.getPosition().y, (int) protein.getRadius(), Color.MAGENTA, G);
 		
 		if (ConfigDataIO.object_info_detail < 1) return;
 		G.setColor(UI.COLOR_PRIMARY);
-		G.drawString("[Age] " + protein.getAge() + " t", 10, 145);
+		G.drawString("[Age] " + protein.getAge() + " tk", 10, 145);
 		G.drawString("[Energy] " + protein.getStorage().getEnergy() + " / " + protein.getStorage().getMaxEnergy() + " nJ", 10, 160);
 		G.drawString("[Energy Usage] " + protein.getEnergyUsage() + " nJ/t", 10, 175);
 		G.drawString("[Temperature] " + (int)(protein.getTemperature()*100)/100.0 + " (preferred: " + (int)(protein.getPreferredTemp()*100)/100.0 + "±5) °K", 10, 190);
@@ -446,9 +469,9 @@ public class Painter extends JPanel {
 		G.drawString("[Position] (" + (int)(spore.getPosition().x*100)/100.0 + ", " + (int)(spore.getPosition().y*100)/100.0 + ")", 10, 75);
 		G.drawString("[Radius] " + (int)(spore.getRadius()*100)/100.0 + " px", 10, 90);
 
-		if (ConfigDataIO.object_info_detail < 1) return;
 		G.drawString("[Age] " + spore.getAge() + " / " + (spore.longIncubation() ? Spore.INCUBATION_TIME_LONG : Spore.INCUBATION_TIME), 10, 115);
 		
+		if (ConfigDataIO.object_info_detail < 1) return;
 		G.drawString("[Mutation History] " + spore.getGenome().getMutationHistory(), 10, 130);
 		
 		drawCircle((int) spore.getPosition().x, (int) spore.getPosition().y, (int) spore.getRadius()*4, Color.MAGENTA, G);
@@ -467,6 +490,31 @@ public class Painter extends JPanel {
 		G.drawString("[Age] " + resource.getAge() + " / " + Resource.MAX_AGE, 10, 130);
 		
 		drawCircle((int) resource.getPosition().x, (int) resource.getPosition().y, (int) resource.getRadius()*2, Color.MAGENTA, G);
+	}
+	
+	private void drawVentStats(MineralVent vent, Graphics G) {
+		G.setColor(UI.COLOR_PRIMARY);
+		G.drawString("Mineral Vent", 10, 20);
+		
+		G.drawString("[Position] (" + (int)(vent.getX()*100)/100.0 + ", " + (getHeight()-1.0) + ")", 10, 45);
+		G.drawString("[Release Interval] " + (int)(vent.getRate()*100)/100.0 + " t", 10, 60);
+		G.drawString("[Release Velocity] " + (int)(vent.getSpeed()*100)/100.0 + " px/t", 10, 75);
+		G.drawString("[Average Amount] " + vent.getAmount(), 10, 90);
+		
+		if (ConfigDataIO.object_info_detail < 1) return;
+		G.setColor(UI.COLOR_SECONDARY);
+		G.drawString("[Energy Weight] " + (int)(vent.getWeight(Resource.ENERGY)*100)/100.0, 10, 115);
+		G.drawString("[N Weight] " + (int)(vent.getWeight(Base.N)*100)/100.0, 10, 130);
+		G.drawString("[A Weight] " + (int)(vent.getWeight(Base.A)*100)/100.0, 10, 145);
+		G.drawString("[D Weight] " + (int)(vent.getWeight(Base.D)*100)/100.0, 10, 160);
+		G.drawString("[P Weight] " + (int)(vent.getWeight(Base.P)*100)/100.0, 10, 175);
+		G.drawString("[Ph Weight] " + (int)(vent.getWeight(Mineral.Ph)*100)/100.0, 10, 190);
+		G.drawString("[Cr Weight] " + (int)(vent.getWeight(Mineral.Cr)*100)/100.0, 10, 205);
+		G.drawString("[Nc Weight] " + (int)(vent.getWeight(Mineral.Nc)*100)/100.0, 10, 220);
+		G.drawString("[Io Weight] " + (int)(vent.getWeight(Mineral.Io)*100)/100.0, 10, 235);
+		G.drawString("[Fr Weight] " + (int)(vent.getWeight(Mineral.Fr)*100)/100.0, 10, 250);
+		
+		drawCircle((int) vent.getX(), (int) getHeight()-vent.getRadius(), (int) (vent.getRadius()*1.3333), Color.MAGENTA, G);
 	}
 	
 	private void drawGeneralStats(Graphics G) {

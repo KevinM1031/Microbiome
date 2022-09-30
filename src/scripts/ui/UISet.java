@@ -13,7 +13,8 @@ public class UISet {
 	
 	private UI interfaceUI, interactionUI, configUI, graphicsConfigUI, dataDisplayConfigUI, mechanicsConfigUI, insertProteinsUI,
 		viewSamplesUI, addSampleUI, deleteSampleUI, disposeProteinsUI, viewSavesUI, environmentConfigUI, advancedConfigUI,
-		photosynthesisConfig, frynxMetabolismConfig, mutationConfig, mineralPairConfig, aminoAcidConfig;
+		photosynthesisConfig, frynxMetabolismConfig, mutationConfig, mineralPairConfig, aminoAcidConfig, behaviorConfig,
+		addVentUI;
 	private UI currUI;	
 	
 	private Point prevMousePos;
@@ -32,20 +33,22 @@ public class UISet {
 		mechanicsConfigUI = MechanicsConfig.getNewMechanicsConfigUI(pos, inputCtrl);
 		configUI = Config.getNewConfigUI(pos, graphicsConfigUI, dataDisplayConfigUI, mechanicsConfigUI);
 		
+		addVentUI = AddVent.getNewAddVentUI(pos, inputCtrl, mineralVents, height);
 		photosynthesisConfig = PhotosynthesisConfig.getNewPhotosynthesisConfigUI(pos, inputCtrl);
 		frynxMetabolismConfig = FrynxMetabolismConfig.getNewFrynxMetabolismConfigUI(pos, inputCtrl);
 		mutationConfig = MutationConfig.getNewMutationConfigUI(pos, inputCtrl);
 		mineralPairConfig = MineralPairConfig.getNewMineralPairConfigUI(pos, inputCtrl);
 		aminoAcidConfig = AminoAcidConfig.getNewAminoAcidConfigUI(pos, inputCtrl);
-		advancedConfigUI = AdvancedConfig.getNewAdvancedConfigUI(pos, photosynthesisConfig, frynxMetabolismConfig, mutationConfig, mineralPairConfig, aminoAcidConfig);
-		environmentConfigUI = EnvironmentConfig.getNewEnvironmentConfigUI(pos, inputCtrl, graphicsConfigUI, advancedConfigUI);
+		behaviorConfig = BehaviorConfig.getNewBehaviorConfigUI(pos, inputCtrl);
+		advancedConfigUI = AdvancedConfig.getNewAdvancedConfigUI(pos, photosynthesisConfig, frynxMetabolismConfig, mutationConfig, mineralPairConfig, aminoAcidConfig, behaviorConfig);
+		environmentConfigUI = EnvironmentConfig.getNewEnvironmentConfigUI(pos, inputCtrl, advancedConfigUI);
 		insertProteinsUI = InsertProteins.getNewInsertProteinsUI(pos, inputCtrl, proteins, spores, width, height);
 		addSampleUI = AddSample.getNewAddSampleUI(pos, inputCtrl);
 		deleteSampleUI = DeleteSample.getNewDeleteSampleUI(pos, inputCtrl);
 		viewSamplesUI = ViewSamples.getNewViewSamplesUI(pos, inputCtrl, insertProteinsUI, addSampleUI, deleteSampleUI);
-		disposeProteinsUI = DisposeProteins.getNewDisposeProteinsUI(pos, inputCtrl, proteins, spores);
+		disposeProteinsUI = DisposeObjects.getNewDisposeObjectsUI(pos, inputCtrl, proteins, spores, resources, mineralVents);
 		viewSavesUI = ViewSaves.getNewViewSavesUI(pos, inputCtrl, proteins, spores, resources, mineralVents, height);
-		interactionUI = Interaction.getNewInteractionUI(pos, environmentConfigUI, insertProteinsUI, viewSamplesUI, disposeProteinsUI, viewSavesUI);
+		interactionUI = Interaction.getNewInteractionUI(pos, environmentConfigUI, insertProteinsUI, viewSamplesUI, disposeProteinsUI, addVentUI, viewSavesUI);
 		
 		interfaceUI = Interface.getNewInterfaceUI(pos, interactionUI, configUI);
 		

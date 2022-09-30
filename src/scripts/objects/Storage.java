@@ -2,7 +2,6 @@ package scripts.objects;
 
 import java.util.LinkedList;
 
-import scripts.Microbiome;
 import scripts.data.ConfigDataIO;
 import scripts.util.Point;
 

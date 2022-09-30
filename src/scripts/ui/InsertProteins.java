@@ -128,18 +128,22 @@ class InsertProteinsUIFunc {
 	}
 	
 	public static void slot6_Func1(int n) {
+		
+		Genome g = new Genome(InsertProteins.genome);
+		if (g.getSequence().length() == 0) return;
+		
 		if (InsertProteins.randomInsertPos)
 			InsertProteins.insertPos = new Point(InsertProteins.width*Math.random(), InsertProteins.height*Math.random());
 
 		switch(InsertProteins.initState) {
 			case 0:
-				InsertProteins.proteins.add(new Protein(InsertProteins.insertPos.clone(), 0, new Genome(InsertProteins.genome)));
+				InsertProteins.proteins.add(new Protein(InsertProteins.insertPos.clone(), 0, g));
 				break;
 			case 1:
-				InsertProteins.spores.add(new Spore(new Genome(InsertProteins.genome), InsertProteins.insertPos.clone(), false, false, true, 0));
+				InsertProteins.spores.add(new Spore(g, InsertProteins.insertPos.clone(), false, false, true, 0));
 				break;
 			case 2:
-				InsertProteins.spores.add(new Spore(new Genome(InsertProteins.genome), InsertProteins.insertPos.clone(), false, true, true, 0));
+				InsertProteins.spores.add(new Spore(g, InsertProteins.insertPos.clone(), false, true, true, 0));
 				break;
 		}
 	}

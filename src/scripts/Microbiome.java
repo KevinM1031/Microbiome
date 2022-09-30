@@ -1,7 +1,6 @@
 package scripts;
 
 import java.awt.Toolkit;
-import java.util.function.Consumer;
 
 public class Microbiome {
 

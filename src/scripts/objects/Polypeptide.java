@@ -5,38 +5,38 @@ public class Polypeptide {
 	private int acidCount;
 	
 	// Motion
-	private int p01; // DA_	Io	simple movement
-	private int p02; // NN_	Io	rapid movement - part a
-	private int p03; // NA_	Nc	rapid movement - part b
+	public int p01; // DA_	Io	simple movement
+	public int p02; // NN_	Io	rapid movement - part a
+	public int p03; // NA_	Nc	rapid movement - part b
 	
 	// Detection
-	private int p04; // AN_	Ph	prey detection
-	private int p05; // AA_	Ph	predator detection
-	private int p06; // AD_	Ph	resource detection
+	public int p04; // AN_	Ph	prey detection
+	public int p05; // AA_	Ph	predator detection
+	public int p06; // AD_	Ph	resource detection
 	
 	// Production
-	private int p07; // PP_	Nc	spore production
+	public int p07; // PP_	Nc	spore production
 	
 	// Interaction
-	private int p08; // AP_	Fr	resource attraction
+	public int p08; // AP_	Fr	resource attraction
 	
 	// Generation
-	private int p09; // PA_	Ph	photosynthesis
-	private int p10; // PN_	Fr	fr generator
+	public int p09; // PA_	Ph	photosynthesis
+	public int p10; // PN_	Fr	fr generator
 	
 	// Relocation
-	private int p11; // PD_	Fr	temperature zone seeker
+	public int p11; // PD_	Fr	temperature zone seeker
 	
 	// Dissolution
-	private int p12; // ND_	Cr	short range dissolver
-	private int p13; // NP_	Cr	wide range dissolver
+	public int p12; // ND_	Cr	short range dissolver
+	public int p13; // NP_	Cr	wide range dissolver
 	
 	// Regulation
-	private int p14; // DN_	Nc	heater (can also cool)
-	private int p15; // DD_	Nc	buoyancy (can also sink)
+	public int p14; // DN_	Nc	heater (can also cool)
+	public int p15; // DD_	Nc	buoyancy (can also sink)
 	
 	// Distraction
-	private int p16; // DP_	Io	apparent hostility reducer
+	public int p16; // DP_	Io	apparent hostility reducer
 	
 	public Polypeptide() {
 		acidCount = 0;

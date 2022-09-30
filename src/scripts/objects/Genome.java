@@ -5,7 +5,6 @@ import java.util.LinkedList;
 
 import scripts.data.SaveDataIO;
 import scripts.util.Point;
-import scripts.util.Utility;
 
 public class Genome {
 
@@ -80,6 +79,7 @@ public class Genome {
 				clone += Base.randomBaseChar();
 				clone += Base.randomBaseChar();
 				newIM++;
+				di = 3;
 				mutated = true;
 			}
 			
@@ -94,7 +94,7 @@ public class Genome {
 			}
 			
 			if(i%4 == 0 && Math.random() < SaveDataIO.region_deletion*SaveDataIO.radiation) {
-				di = 4;
+				di = 3;
 				newDM++;
 				
 			}
