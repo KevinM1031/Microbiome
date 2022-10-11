@@ -27,7 +27,7 @@ public class Microbiome {
 		defaultDriver();
 	}
 	
-	private static void defaultDriver() {
+	public static void defaultDriver() {
 		Window W = new Window(TITLE, WIDTH, HEIGHT, new Painter(WIDTH, HEIGHT));
 		
 		long t1, t2 = System.currentTimeMillis(), updateCount = 0;

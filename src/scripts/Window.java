@@ -1,5 +1,6 @@
 package scripts;
 
+import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 
@@ -8,6 +9,9 @@ public class Window extends JFrame {
 	private static final long serialVersionUID = 1L;
 	
 	public Window(String title, int width, int height, JPanel content) {
+		
+		setIconImage(new ImageIcon(getClass().getResource("icon.png")).getImage());
+		
 		setName(title);
 		setSize(width, height);
 		setLocationRelativeTo(null);

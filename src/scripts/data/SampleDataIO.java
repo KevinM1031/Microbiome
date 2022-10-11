@@ -1,8 +1,12 @@
 package scripts.data;
 
-import java.io.FileReader;
-import java.io.FileWriter;
+import java.io.BufferedWriter;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 
 public class SampleDataIO {
@@ -11,7 +15,8 @@ public class SampleDataIO {
 	
 	public static void loadSamples() {
 		try {
-			FileReader reader = new FileReader("src/scripts/data/samples.txt");
+			InputStream inputStream = ConfigDataIO.class.getResourceAsStream("samples.txt");
+			InputStreamReader reader = new InputStreamReader(inputStream);
 			int raw, i = -1, j = 0;
 			String name = "", genome = "", interval = "";
 			int[] schedules = new int[SaveDataIO.MAX_SAVES];
@@ -80,7 +85,8 @@ public class SampleDataIO {
 		}
 		
 		try {
-			FileWriter writer = new FileWriter("src/scripts/data/samples.txt");
+			Path path = Paths.get("samples.txt");
+			BufferedWriter writer = Files.newBufferedWriter(path);
 			writer.write(saveData);
 			writer.close();
 
