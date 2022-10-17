@@ -1,12 +1,8 @@
 package scripts.data;
 
-import java.io.BufferedWriter;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.LinkedList;
 
 import scripts.objects.Base;
@@ -110,8 +106,7 @@ public class SaveDataIO {
 			LinkedList<Resource> resources, LinkedList<MineralVent> mineralVents, int height) {
 		
 		try {
-			InputStream inputStream = ConfigDataIO.class.getResourceAsStream("saves/saveDescriptions.txt");
-			InputStreamReader reader = new InputStreamReader(inputStream);
+			FileReader reader = new FileReader("saves/saveDescriptions.txt");
 			int raw, currIndex = 1, i = -1;
 			String str = "";
 			 
@@ -147,8 +142,7 @@ public class SaveDataIO {
 		
 		// environment
 		try {
-			InputStream inputStream = ConfigDataIO.class.getResourceAsStream("saves/save" + index_ + "/environment.txt");
-			InputStreamReader reader = new InputStreamReader(inputStream);
+			FileReader reader = new FileReader("saves/save" + index_ + "/environment.txt");
 			int raw, i = 0;
 			String str = "";
  
@@ -256,8 +250,7 @@ public class SaveDataIO {
 		
 		// proteins
 		try {
-			InputStream inputStream = ConfigDataIO.class.getResourceAsStream("saves/save" + index_ + "/proteins.txt");
-			InputStreamReader reader = new InputStreamReader(inputStream);
+			FileReader reader = new FileReader("saves/save" + index_ + "/proteins.txt");
 			int raw, i = 0;
 			String str = "", gene = "";
 			double x = 0, y = 0, r = 0;
@@ -318,8 +311,7 @@ public class SaveDataIO {
 		
 		// spores
 		try {
-			InputStream inputStream = ConfigDataIO.class.getResourceAsStream("saves/save" + index_ + "/spores.txt");
-			InputStreamReader reader = new InputStreamReader(inputStream);
+			FileReader reader = new FileReader("saves/save" + index_ + "/spores.txt");
 			int raw, i = 0;
 			String str = "", gene = "";
 			double x = 0, y = 0;
@@ -363,8 +355,7 @@ public class SaveDataIO {
 		
 		// resources
 		try {
-			InputStream inputStream = ConfigDataIO.class.getResourceAsStream("saves/save" + index_ + "/resources.txt");
-			InputStreamReader reader = new InputStreamReader(inputStream);
+			FileReader reader = new FileReader("saves/save" + index_ + "/resources.txt");
 			int raw, i = 0;
 			String str = "";
 			double x = 0, y = 0;
@@ -405,8 +396,7 @@ public class SaveDataIO {
 		
 		// vents
 		try {
-			InputStream inputStream = ConfigDataIO.class.getResourceAsStream("saves/save" + index_ + "/vents.txt");
-			InputStreamReader reader = new InputStreamReader(inputStream);
+			FileReader reader = new FileReader("saves/save" + index_ + "/vents.txt");
 			int raw, i = 0;
 			String str = "";
 			int amount = 0;
@@ -463,8 +453,7 @@ public class SaveDataIO {
 		}
 		
 		try {
-			Path path = Paths.get("saves/saveDescriptions.txt");
-			BufferedWriter writer = Files.newBufferedWriter(path);
+			FileWriter writer = new FileWriter("saves/saveDescriptions.txt");
 			writer.write(saveData);
 			writer.close();
 
@@ -491,8 +480,7 @@ public class SaveDataIO {
 					mh[0] + "|" + mh[1] + "|" + mh[2] + "|" + mh[3] + "\n";
 		}
 		try {
-			Path path = Paths.get("saves/save" + index_ + "/proteins.txt");
-			BufferedWriter writer = Files.newBufferedWriter(path);
+			FileWriter writer = new FileWriter("saves/save" + index_ + "/proteins.txt");
 			writer.write(saveData);
 			writer.close();
 
@@ -507,8 +495,7 @@ public class SaveDataIO {
 					s.longIncubation() + "|" + s.getAge() + "\n";
 		}
 		try {
-			Path path = Paths.get("saves/save" + index_ + "/spores.txt");
-			BufferedWriter writer = Files.newBufferedWriter(path);
+			FileWriter writer = new FileWriter("saves/save" + index_ + "/spores.txt");
 			writer.write(saveData);
 			writer.close();
 
@@ -522,8 +509,7 @@ public class SaveDataIO {
 			saveData += r.getPosition().x + "|" + r.getPosition().y + "|" + r.getType() + "|" + r.getAmount() + "\n";
 		}
 		try {
-			Path path = Paths.get("saves/save" + index_ + "/resources.txt");
-			BufferedWriter writer = Files.newBufferedWriter(path);
+			FileWriter writer = new FileWriter("saves/save" + index_ + "/resources.txt");
 			writer.write(saveData);
 			writer.close();
 
@@ -542,8 +528,7 @@ public class SaveDataIO {
 						v.getWeight(Mineral.Io) + "|" + v.getWeight(Mineral.Fr) + "\n";
 		}
 		try {
-			Path path = Paths.get("saves/save" + index_ + "/vents.txt");
-			BufferedWriter writer = Files.newBufferedWriter(path);
+			FileWriter writer = new FileWriter("saves/save" + index_ + "/vents.txt");
 			writer.write(saveData);
 			writer.close();
 
@@ -592,8 +577,7 @@ public class SaveDataIO {
 				ignore_temperature_upper_bound + "|" + ignore_temperature_lower_bound + "\n";
 		
 		try {
-			Path path = Paths.get("saves/save" + index_ + "/environment.txt");
-			BufferedWriter writer = Files.newBufferedWriter(path);
+			FileWriter writer = new FileWriter("saves/save" + index_ + "/environment.txt");
 			writer.write(saveData);
 			writer.close();
 

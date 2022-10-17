@@ -1,12 +1,8 @@
 package scripts.data;
 
-import java.io.BufferedWriter;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 
 import scripts.Microbiome;
 
@@ -36,8 +32,7 @@ public class ConfigDataIO {
 	
 	public static void loadConfig() {
 		try {
-			InputStream inputStream = ConfigDataIO.class.getResourceAsStream("config.txt");
-			InputStreamReader reader = new InputStreamReader(inputStream);
+			FileReader reader = new FileReader("config.txt");
 			int raw;
 			int i = 0;
 			boolean reading = false;
@@ -134,8 +129,7 @@ public class ConfigDataIO {
 		String saveData = "";
 				
 		try {
-			InputStream inputStream = ConfigDataIO.class.getResourceAsStream("config.txt");
-			InputStreamReader reader = new InputStreamReader(inputStream);
+			FileReader reader = new FileReader("config.txt");
 			int raw;
 			int i = 0;
 			boolean skipping = false;
@@ -223,8 +217,7 @@ public class ConfigDataIO {
 		}
 		
 		try {
-			Path path = Paths.get("config.txt");
-			BufferedWriter writer = Files.newBufferedWriter(path);
+			FileWriter writer = new FileWriter("config.txt");
 			writer.write(saveData);
 			writer.close();
 

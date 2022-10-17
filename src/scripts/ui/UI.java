@@ -114,7 +114,7 @@ public class UI {
 		G.setColor((highlightBackBtn) ? COLOR_PRIMARY : COLOR_SECONDARY);
 		G.drawRect((int) (pos.x+BORDER_SIZE+BACKBTN_XOFF), (int) (pos.y+BORDER_SIZE), BACKBTN_SIZE, BACKBTN_SIZE);
 		G.setColor(COLOR_PRIMARY);
-		Utility.drawCenteredString(G, "↩", pos.x+BORDER_SIZE+BACKBTN_XOFF, pos.y+BORDER_SIZE, BACKBTN_SIZE, TITLE_HEIGHT);
+		Utility.drawCenteredString(G, "↶", pos.x+BORDER_SIZE+BACKBTN_XOFF, pos.y+BORDER_SIZE, BACKBTN_SIZE, TITLE_HEIGHT);
 		
 		// partition lines
 		G.setColor(COLOR_SECONDARY);
