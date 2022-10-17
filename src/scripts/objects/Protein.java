@@ -577,8 +577,8 @@ public class Protein {
 	
 	private boolean isPrey(Protein p) {
 		return !equals(p) && p.getPerceivedThreatLevel() < info.getThreatLevel()*SaveDataIO.prey_threat_level && 
-				(p.getStorage().getEnergy() > storage.getMaxEnergy()*SaveDataIO.starvation_threshold || 
-						storage.getEnergy() < storage.getMaxEnergy()*SaveDataIO.prey_min_energy);
+				(storage.getEnergy() > storage.getMaxEnergy()*SaveDataIO.starvation_threshold || 
+						p.getStorage().getEnergy() < storage.getMaxEnergy()*SaveDataIO.prey_min_energy);
 	}
 	
 	private boolean willIgnoreTemp() {
