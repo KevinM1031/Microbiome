@@ -316,7 +316,7 @@ public class SaveDataIO {
 			String str = "", gene = "";
 			double x = 0, y = 0;
 			boolean longIncubation = false;
-			int energy = 0, age = 0;
+			int energy = 0, age = 0, generation = 0, pM = 0, iM = 0, dM = 0, cM = 0;
 			
 			spores.clear();
  
@@ -325,7 +325,8 @@ public class SaveDataIO {
 				
 				if (c == '\n') {
 					age = Integer.parseInt(str);
-					spores.addFirst(new Spore(new Genome(gene), energy, new Point(x, y), false, longIncubation, true, age));
+					spores.addFirst(new Spore(new Genome(gene, generation, pM, iM, dM, cM), energy, 
+							new Point(x, y), false, longIncubation, true, age));
 					i = 0;
 					str = "";
 					
@@ -336,6 +337,11 @@ public class SaveDataIO {
 						case 2: gene = str; break;
 						case 3: energy = Integer.parseInt(str); break;
 						case 4: longIncubation = Boolean.parseBoolean(str); break;
+						case 5: generation = Integer.parseInt(str); break;
+						case 6: pM = Integer.parseInt(str); break;
+						case 7: iM = Integer.parseInt(str); break;
+						case 8: dM = Integer.parseInt(str); break;
+						case 9: cM = Integer.parseInt(str); break;
 					}
 					
 					str = "";
@@ -491,8 +497,10 @@ public class SaveDataIO {
 		// spores
 		saveData = "";
 		for (Spore s : spores) {
+			int[] mh = s.getGenome().getEachMutationHistory();
 			saveData += s.getPosition().x + "|" + s.getPosition().y + "|" + s.getGenome().getSequence() + "|" + s.getEnergy() + "|" +
-					s.longIncubation() + "|" + s.getAge() + "\n";
+					s.longIncubation() + "|" + s.getAge() + "|" + s.getGenome().getGeneration() + "|" + 
+					mh[0] + "|" + mh[1] + "|" + mh[2] + "|" + mh[3] + "\n";
 		}
 		try {
 			FileWriter writer = new FileWriter("saves/save" + index_ + "/spores.txt");

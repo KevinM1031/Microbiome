@@ -470,6 +470,7 @@ public class Painter extends JPanel {
 		G.drawString("[Radius] " + (int)(spore.getRadius()*100)/100.0 + " px", 10, 90);
 
 		G.drawString("[Age] " + spore.getAge() + " / " + (spore.longIncubation() ? Spore.INCUBATION_TIME_LONG : Spore.INCUBATION_TIME), 10, 115);
+		G.drawString("[Mutation History] " + spore.getGenome().getMutationHistory(), 10, 130);
 		
 		if (ConfigDataIO.object_info_detail < 1) return;
 		G.drawString("[Mutation History] " + spore.getGenome().getMutationHistory(), 10, 130);
