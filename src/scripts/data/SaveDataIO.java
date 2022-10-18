@@ -324,7 +324,7 @@ public class SaveDataIO {
 				char c = (char) raw;
 				
 				if (c == '\n') {
-					age = Integer.parseInt(str);
+					cM = Integer.parseInt(str);
 					spores.addFirst(new Spore(new Genome(gene, generation, pM, iM, dM, cM), energy, 
 							new Point(x, y), false, longIncubation, true, age));
 					i = 0;
@@ -337,11 +337,11 @@ public class SaveDataIO {
 						case 2: gene = str; break;
 						case 3: energy = Integer.parseInt(str); break;
 						case 4: longIncubation = Boolean.parseBoolean(str); break;
-						case 5: generation = Integer.parseInt(str); break;
-						case 6: pM = Integer.parseInt(str); break;
-						case 7: iM = Integer.parseInt(str); break;
-						case 8: dM = Integer.parseInt(str); break;
-						case 9: cM = Integer.parseInt(str); break;
+						case 5: age = Integer.parseInt(str); break;
+						case 6: generation = Integer.parseInt(str);
+						case 7: pM = Integer.parseInt(str); break;
+						case 8: iM = Integer.parseInt(str); break;
+						case 9: dM = Integer.parseInt(str); break;
 					}
 					
 					str = "";
