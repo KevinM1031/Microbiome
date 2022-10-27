@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 
 import scripts.data.SaveDataIO;
+import scripts.objects.Block;
 import scripts.objects.MineralVent;
 import scripts.objects.Protein;
 import scripts.objects.Resource;
@@ -24,15 +25,18 @@ public class ViewSaves {
 	protected static LinkedList<Spore> spores;
 	protected static LinkedList<Resource> resources;
 	protected static LinkedList<MineralVent> mineralVents;
+	protected static LinkedList<Block> blocks;
 	
 	public static UI getNewViewSavesUI(Point pos, InputControl inputCtrl,
 			LinkedList<Protein> proteins_, LinkedList<Spore> spores_, 
-			LinkedList<Resource> resources_, LinkedList<MineralVent> mineralVents_, int height_) {
+			LinkedList<Resource> resources_, LinkedList<MineralVent> mineralVents_, 
+			LinkedList<Block> blocks_, int height_) {
 		
 		proteins = proteins_;
 		spores = spores_;
 		resources = resources_;
 		mineralVents = mineralVents_;
+		blocks = blocks_;
 		height = height_;
 		index = SaveDataIO.getIndex()-1;
 		
@@ -91,16 +95,19 @@ class ViewSavesUIFunc {
 	}
 	
 	public static void slot3_Func1(int n) {
-		SaveDataIO.reloadSave(ViewSaves.index+1, true, ViewSaves.proteins, ViewSaves.spores, ViewSaves.resources, ViewSaves.mineralVents, ViewSaves.height);
+		SaveDataIO.reloadSave(ViewSaves.index+1, true, ViewSaves.proteins, ViewSaves.spores, ViewSaves.resources, 
+				ViewSaves.mineralVents, ViewSaves.blocks, ViewSaves.height);
 		ViewSaves.sSlot.setActive(SaveDataIO.getIndex() != ViewSaves.index+1);
 		SaveDataIO.updateDescriptions();
 	}
 	
 	public static void slot4_Func1(int n) {
-		SaveDataIO.reloadSave(ViewSaves.index+1, false, ViewSaves.proteins, ViewSaves.spores, ViewSaves.resources, ViewSaves.mineralVents, ViewSaves.height);
+		SaveDataIO.reloadSave(ViewSaves.index+1, false, ViewSaves.proteins, ViewSaves.spores, ViewSaves.resources, 
+				ViewSaves.mineralVents, ViewSaves.blocks, ViewSaves.height);
 	}
 	
 	public static void slot5_Func1(int n) {
-		SaveDataIO.updateSave(ViewSaves.index+1, ViewSaves.proteins, ViewSaves.spores, ViewSaves.resources, ViewSaves.mineralVents);
+		SaveDataIO.updateSave(ViewSaves.index+1, ViewSaves.proteins, ViewSaves.spores, ViewSaves.resources, 
+				ViewSaves.mineralVents, ViewSaves.blocks);
 	}
 }

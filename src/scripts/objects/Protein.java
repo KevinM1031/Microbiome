@@ -5,6 +5,7 @@ import java.util.LinkedList;
 import scripts.Microbiome;
 import scripts.data.ConfigDataIO;
 import scripts.data.SaveDataIO;
+import scripts.util.Line;
 import scripts.util.Point;
 import scripts.util.Utility;
 import scripts.util.Vector;
@@ -20,6 +21,7 @@ public class Protein {
 	public static final double RADIUS_BUFFER_MULT = 3;
 	public static final int MAX_PERSISTENCE = 500;
 	public static final int MAX_FATIGUE = 0;
+	public static final int IMMOBILE_PROTEIN_COLLISION_CHECK_INTERVAL = 500;
 	
 	public static int INTERACTION_RADIUS;
 	
@@ -50,6 +52,7 @@ public class Protein {
 	private int fatigue;
 	private boolean alive;
 	private int state;
+	private long prevImmobileProteinCollisionCheckTime;
 	
 	private Polypeptide info;
 	private double radius;
@@ -82,6 +85,7 @@ public class Protein {
 		this.acids = new LinkedList<AminoAcid>();
 		this.alive = true;
 		this.state = IDLE;
+		this.prevImmobileProteinCollisionCheckTime = 0;
 		
 		this.position = position;
 		this.velocity = new Vector(0, 0);
@@ -212,6 +216,15 @@ public class Protein {
 				a.move(velocity);
 			this.position.add(velocity);
 		}
+	}
+	
+	public void teleport(Point pos) {
+		Vector v = new Vector(pos.x, pos.y);
+		v.subtract(position);
+		for(AminoAcid a : acids) {
+			a.move(v);
+		}
+		position = pos;
 	}
 	
 	public double getRotation() {
@@ -407,7 +420,8 @@ public class Protein {
 	}
 		
 	public void update(LinkedList<Protein> proteins, LinkedList<Protein> proteinRemoveList, 
-			LinkedList<Resource> resources, LinkedList<Resource> resourceRemoveList, int width, int height, long prevUpdateTime) {
+			LinkedList<Resource> resources, LinkedList<Resource> resourceRemoveList, LinkedList<Block> blocks,
+			int width, int height, long prevUpdateTime) {
 		
 		prevEnergy = currEnergy;
 		
@@ -422,69 +436,148 @@ public class Protein {
 		
 		if(isHunting())
 			energySpent += huntingEnergy;
+		
+		double halfRadius = radius/2;
+		
+		if (speed > 0 || System.currentTimeMillis()-prevImmobileProteinCollisionCheckTime < IMMOBILE_PROTEIN_COLLISION_CHECK_INTERVAL) {
+			
+			prevImmobileProteinCollisionCheckTime = System.currentTimeMillis();
+			
+			if(position.x < halfRadius) {
+				teleport(new Point(halfRadius, position.y));
+				velocity.multX(-1);
 				
+			} else if(position.x >= width-halfRadius) {
+				teleport(new Point(width-halfRadius, position.y));
+				velocity.multX(-1);
+			} 
+			
+			if(position.y < halfRadius) {
+				teleport(new Point(position.x, halfRadius));
+				velocity.multY(-1);
+				
+			} else if(position.y >= height-halfRadius) {
+				teleport(new Point(position.x, height-halfRadius));
+				velocity.multY(-1);
+			}
+			
+			for (Block block : blocks) {
+				if (position.x+halfRadius > block.getPosition().x && position.x-halfRadius < block.getPosition().x+block.getWidth() &&
+						position.y+halfRadius > block.getPosition().y && position.y-halfRadius < block.getPosition().y+block.getHeight()) {
+					
+					double l = position.x-block.getPosition().x;
+					double r = block.getWidth()+block.getPosition().x-position.x;
+					double t = position.y-block.getPosition().y;
+					double b = block.getHeight()+block.getPosition().y-position.y;
+					
+					if (speed <= 0) energySpent += Math.max(1000, storage.getEnergy()/20);
+					else rotationGoal = rotationGoal + Math.random()*2*Math.PI - Math.PI;
+					
+					if (Math.min(l, r) < Math.min(t, b)) {
+						teleport(new Point(block.getPosition().x + ((l < r) ? (-halfRadius) : (halfRadius+block.getWidth())), position.y));
+						velocity.multX(-1);
+					} else {
+						teleport(new Point(position.x, block.getPosition().y + ((t < b) ? (-halfRadius) : (halfRadius+block.getHeight()))));
+						velocity.multY(-1);
+					}
+				}
+			}
+		}
+		
 		if(!storage.removeEnergy((int) (energySpent*modifier*Math.pow(tempMod, 3)))) {
 			kill(proteinRemoveList, resources, width, height);
 			return;
 		}
 		
 		if(speed > 0 || info.getThreatLevel() > 0) {
-			Point p;
+			Point p, q;
 			
 			// Avoiding predator
-			if((p = nearestPredator(proteins)) != null) {
+			if((p = nearestPredator(proteins, blocks)) != null) {
 				state = ESCAPING;
 				
 				// Avoiding wall
-				if(!Utility.circleRectCollision(position, getRadius(), 0, 0, width, height)) {
+				if(!Utility.circleRectCollision(position, getRadius()*RADIUS_BUFFER_MULT, 0, 0, width, height) && 
+						!Utility.circleBlocksCollision(position, getRadius(), blocks)) {
 					rotationGoal = Utility.angleToPoint(position, p) + Math.PI;
-													
+				
+				// Move to the opposite direction of predator
 				} else {
 					p = new Point(position.x, position.y + getRadius()*RADIUS_BUFFER_MULT);
 					p.rotate(position, rotationGoal);
+					q = new Point(position.x, position.y + getRadius());
+					q.rotate(position, rotationGoal);
 					
-					if(Utility.pointRectCollision(p, 0, 0, width, height)) {
+					if(Utility.pointRectCollision(p, 0, 0, width, height) || Utility.circleBlocksCollision(q, getRadius(), blocks)) {
 						rotationGoal = rotationGoal + Math.random()*2*Math.PI - Math.PI;
 					}
 				}
 				
 			// Approaching resource
-			} else if(persistence > 0 && (p = nearestResource(resources)) != null) {
+			} else if(persistence > 0 && (p = nearestResource(resources, blocks)) != null) {
 				state = GATHERING;
 				rotationGoal = Utility.angleToPoint(position, p);
 				persistence--;
 							
 			// Chasing prey
-			} else if(persistence > 0 && (p = nearestPrey(proteins)) != null) {
+			} else if(persistence > 0 && (p = nearestPrey(proteins, blocks)) != null) {
 				state = HUNTING;
 				rotationGoal = Utility.angleToPoint(position, p);
 				persistence--;
 				
 			// Returning to higher temperature
-			} else if(speed > 0 && temperature+PREFERRED_TEMP_RANGE < preferredTemp && !willIgnoreTemp()) {
+			} else if(persistence > 0 && speed > 0 && temperature+PREFERRED_TEMP_RANGE < preferredTemp && !willIgnoreTemp()) {
 				state = RETURNING;
-				rotationGoal = Environment.higherTempDirection();
+				p = new Point(position.x, position.y + getRadius()*RADIUS_BUFFER_MULT);
+				p.rotate(position, rotationGoal);
+				q = new Point(position.x, position.y + getRadius());
+				q.rotate(position, rotationGoal);
 				
+				// Avoiding wall
+				if(Utility.pointRectCollision(p, 0, 0, width, height) || Utility.circleBlocksCollision(q, getRadius(), blocks)) {
+					rotationGoal = rotationGoal + Math.random()*2*Math.PI - Math.PI;
+					persistence = 0;
+				
+				// Move to higher temperature zone
+				} else {
+					rotationGoal = Environment.higherTempDirection();
+				}
+								
 			// Returning to lower temperature
-			} else if(speed > 0 && temperature-PREFERRED_TEMP_RANGE > preferredTemp && !willIgnoreTemp()) {
+			} else if(persistence > 0 && speed > 0 && temperature-PREFERRED_TEMP_RANGE > preferredTemp && !willIgnoreTemp()) {
 				state = RETURNING;
-				rotationGoal = Environment.lowerTempDirection();
+				p = new Point(position.x, position.y + getRadius()*RADIUS_BUFFER_MULT);
+				p.rotate(position, rotationGoal);
+				q = new Point(position.x, position.y + getRadius());
+				q.rotate(position, rotationGoal);
+				
+				// Avoiding wall
+				if(Utility.pointRectCollision(p, 0, 0, width, height) || Utility.circleBlocksCollision(q, getRadius(), blocks)) {
+					rotationGoal = rotationGoal + Math.random()*2*Math.PI - Math.PI;
+					persistence = 0;
+					
+				// Move to lower temperature zone
+				} else {
+					rotationGoal = Environment.lowerTempDirection();
+				}
 			
 			// Wandering
 			} else {
-				
 				state = IDLE;
 				p = new Point(position.x, position.y + getRadius()*RADIUS_BUFFER_MULT);
 				p.rotate(position, rotationGoal);
+				q = new Point(position.x, position.y + getRadius());
+				q.rotate(position, rotationGoal);
 				
 				// Avoiding wall
-				if(Utility.pointRectCollision(p, 0, 0, width, height)) {
+				if(Utility.pointRectCollision(p, 0, 0, width, height) || Utility.circleBlocksCollision(q, getRadius(), blocks)) {
 					rotationGoal = rotationGoal + Math.random()*2*Math.PI - Math.PI;
  				
 				// Spontaneous motion
 				} else if(age >= nextActionAge) {
 					rotationGoal = rotationGoal + Math.random()*Math.PI - Math.PI/2;
 					nextActionAge += ACTION_INTERVAL;
+
 				}
 				
 				if(fatigue == 0) persistence = MAX_PERSISTENCE;
@@ -523,14 +616,66 @@ public class Protein {
 		age += timeElapsed;
 	}
 	
-	private Point nearestPredator(LinkedList<Protein> proteins) {
-		Point p = null;
+	private Point nearestPredator(LinkedList<Protein> proteins, LinkedList<Block> blocks) {
+		Point temp = new Point(0, 0), p = null;
+		Line v = new Line(new Point(0, 0), new Point(0, 0));
 		double min = Double.MAX_VALUE;
 		double curr;
+		boolean obstructed = false;
 		
 		for(Protein protein : proteins) {
 			curr = protein.getPosition().distanceTo(position);
-			if(curr <= getPredatorVision() && isPredator(protein) && curr < min) {
+			temp.x = protein.getPosition().x;
+			temp.y = protein.getPosition().y;
+			obstructed = false;
+			
+			v.a.x = temp.x;
+			v.a.y = temp.y;
+			v.b.x = position.x;
+			v.b.y = position.y;
+			for (Block block : blocks) {
+				if (block.b.intersectsWith(v) || block.t.intersectsWith(v) || block.l.intersectsWith(v) || block.r.intersectsWith(v)) {
+					obstructed = true;
+					break;
+				}
+			}
+						
+			if(!obstructed && curr <= getPredatorVision() && isPredator(protein) && curr < min) {
+				min = curr;
+				p = new Point(temp.x, temp.y);
+			}
+		}
+		
+		return p;
+	}
+	
+	private Point nearestPrey(LinkedList<Protein> proteins, LinkedList<Block> blocks) {
+		Point temp = new Point(0, 0), p = null;
+		Line v = new Line(new Point(0, 0), new Point(0, 0));
+		double min = Double.MAX_VALUE;
+		double curr;
+		boolean obstructed = false;
+		
+		for(Protein protein : proteins) {
+			
+			curr = protein.getPosition().distanceTo(position);
+			temp.x = protein.getPosition().x;
+			temp.y = protein.getPosition().y;
+			obstructed = false;
+			
+			v.a.x = temp.x;
+			v.a.y = temp.y;
+			v.b.x = position.x;
+			v.b.y = position.y;
+			for (Block block : blocks) {
+				if (block.b.intersectsWith(v) || block.t.intersectsWith(v) || block.l.intersectsWith(v) || block.r.intersectsWith(v)) {
+					obstructed = true;
+					break;
+				}
+			}
+			
+			curr = protein.getPosition().distanceTo(position);
+			if(!obstructed && curr <= getPreyVision() && isPrey(protein) && curr < min) {
 				min = curr;
 				p = new Point(protein.getPosition().x, protein.getPosition().y);
 			}
@@ -539,30 +684,32 @@ public class Protein {
 		return p;
 	}
 	
-	private Point nearestPrey(LinkedList<Protein> proteins) {
-		Point p = null;
+	private Point nearestResource(LinkedList<Resource> resources, LinkedList<Block> blocks) {
+		Point temp = new Point(0, 0), p = null;
+		Line v = new Line(new Point(0, 0), new Point(0, 0));
 		double min = Double.MAX_VALUE;
 		double curr;
-		
-		for(Protein protein : proteins) {
-			curr = protein.getPosition().distanceTo(position);
-			if(curr <= getPreyVision() && isPrey(protein) && curr < min) {
-				min = curr;
-				p = new Point(protein.getPosition().x, protein.getPosition().y);
-			}
-		}
-		
-		return p;
-	}
-	
-	private Point nearestResource(LinkedList<Resource> resources) {
-		Point p = null;
-		double min = Double.MAX_VALUE;
-		double curr;
+		boolean obstructed = false;
 		
 		for(Resource resource : resources) {
 			curr = resource.getPosition().distanceTo(position);
-			if(curr <= getResourceVision() && storage.canStore(resource) && curr < min) {
+			temp.x = resource.getPosition().x;
+			temp.y = resource.getPosition().y;
+			obstructed = false;
+			
+			v.a.x = temp.x;
+			v.a.y = temp.y;
+			v.b.x = position.x;
+			v.b.y = position.y;
+			for (Block block : blocks) {
+				if (block.b.intersectsWith(v) || block.t.intersectsWith(v) || block.l.intersectsWith(v) || block.r.intersectsWith(v)) {
+					obstructed = true;
+					break;
+				}
+			}
+			
+			curr = resource.getPosition().distanceTo(position);
+			if(!obstructed && curr <= getResourceVision() && storage.canStore(resource) && curr < min) {
 				min = curr;
 				p = new Point(resource.getPosition().x, resource.getPosition().y);
 			}

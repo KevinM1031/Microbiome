@@ -10,6 +10,7 @@ public class SampleDataIO {
 	public static ArrayList<Sample> samples;
 	
 	public static void loadSamples() {
+		
 		try {
 			FileReader reader = new FileReader("samples.txt");
 			int raw, i = -1, j = 0;

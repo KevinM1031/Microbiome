@@ -15,18 +15,20 @@ public class AddVent {
 	
 	protected static LinkedList<MineralVent> vents;
 	
-	protected static double x=0, rate=5.5, speed=1.75, e=0, n=0, a=0, d=0, p=0, ph=0.1, cr=0.1, nc=0.1, io=0.1, fr=1;
-	protected static int height, amount=50;
+	protected static double x=0, y=0, rate=5.5, speed=1.75, e=0, n=0, a=0, d=0, p=0, ph=0.1, cr=0.1, nc=0.1, io=0.1, fr=1;
+	protected static int amount=50;
 	
-	public static UI getNewAddVentUI(Point pos, InputControl inputCtrl, LinkedList<MineralVent> vents_, 
-			int height_) {
+	public static UI getNewAddVentUI(Point pos, InputControl inputCtrl, LinkedList<MineralVent> vents_) {
 		
 		vents = vents_;
-		height = height_;
 		
 		// SLOT 1
 		UIEvent<Returner<String>> event1 = new UIEvent<Returner<String>>(AddVentUIFunc::slot1_Func1, "x-Coordinate");
 		Slot slot1 = new InputSlot(event1, x+"", "", " px", inputCtrl);
+		
+		// SLOT 16
+		UIEvent<Returner<String>> event16 = new UIEvent<Returner<String>>(AddVentUIFunc::slot16_Func1, "y-Coordinate");
+		Slot slot16 = new InputSlot(event16, y+"", "", " px", inputCtrl);
 		
 		// SLOT 2
 		UIEvent<Returner<String>> event2 = new UIEvent<Returner<String>>(AddVentUIFunc::slot2_Func1, "Release Delay");
@@ -87,6 +89,7 @@ public class AddVent {
 		// SUMMARY
 		ArrayList<Slot> slots = new ArrayList<Slot>();
 		slots.add(slot1);
+		slots.add(slot16);
 		slots.add(slot2);
 		slots.add(slot3);
 		slots.add(slot4);
@@ -116,6 +119,16 @@ class AddVentUIFunc {
 		} catch(NumberFormatException e) {}
 		
 		AddVent.x = n;
+		rtr.set(n+"");
+	}
+	
+	public static void slot16_Func1(Returner<String> rtr) {
+		double n = 0;
+		try {
+			n = Math.min(Double.MAX_VALUE, Math.max(0, Double.parseDouble(rtr.get())));
+		} catch(NumberFormatException e) {}
+		
+		AddVent.y = n;
 		rtr.set(n+"");
 	}
 	
@@ -266,7 +279,7 @@ class AddVentUIFunc {
 	public static void slot15_Func1(int n) {
 
 		AddVent.vents.addFirst(new MineralVent(
-				AddVent.x, AddVent.height, AddVent.rate, AddVent.speed, AddVent.amount,
+				new Point(AddVent.x, AddVent.y), AddVent.rate, AddVent.speed, AddVent.amount,
 				AddVent.e, AddVent.n, AddVent.a, AddVent.d, AddVent.p, AddVent.ph, AddVent.cr, AddVent.nc, AddVent.io, AddVent.fr));
 	}
 }

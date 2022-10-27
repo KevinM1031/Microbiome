@@ -32,7 +32,7 @@ public class LabeledCycleSlot extends Slot {
 	@Override
 	public UI update(Point pos, Point mousePos, boolean clicked) {
 		
-		if(events.size() > 1 && Utility.pointRectInclusion(mousePos, pos.x+LEFTBTN_XOFF, pos.y, CYCLEBTN_WIDTH, HEIGHT)) {
+		if(active && events.size() > 1 && Utility.pointRectInclusion(mousePos, pos.x+LEFTBTN_XOFF, pos.y, CYCLEBTN_WIDTH, HEIGHT)) {
 			highlightLeftBtn = true;
 			highlight = highlightRightBtn = false;
 			
@@ -40,7 +40,7 @@ public class LabeledCycleSlot extends Slot {
 				cycleLeft();
 			
 				
-		} else if(events.size() > 1 && Utility.pointRectInclusion(mousePos, pos.x+RIGHTBTN_XOFF, pos.y, CYCLEBTN_WIDTH, HEIGHT)) {
+		} else if(active && events.size() > 1 && Utility.pointRectInclusion(mousePos, pos.x+RIGHTBTN_XOFF, pos.y, CYCLEBTN_WIDTH, HEIGHT)) {
 			highlightRightBtn = true;
 			highlight = highlightLeftBtn = false;
 			
@@ -73,10 +73,11 @@ public class LabeledCycleSlot extends Slot {
 		Utility.drawCenteredString(G, label, pos.x, pos.y, LABEL_WIDTH, HEIGHT);
 		
 		// select text
+		G.setColor(active ? UI.COLOR_PRIMARY : UI.COLOR_SECONDARY);
 		Utility.drawCenteredString(G, events.get(currIndex).getLabel(), pos.x+SELECT_XOFF, pos.y, SELECT_WIDTH, HEIGHT);
 		
 		// cycle button text
-		G.setColor((events.size() > 1) ? UI.COLOR_PRIMARY : UI.COLOR_SECONDARY);
+		G.setColor((active && events.size() > 1) ? UI.COLOR_PRIMARY : UI.COLOR_SECONDARY);
 		Utility.drawCenteredString(G, "◀", pos.x+LEFTBTN_XOFF, pos.y, CYCLEBTN_WIDTH, HEIGHT);
 		Utility.drawCenteredString(G, "▶", pos.x+RIGHTBTN_XOFF, pos.y, CYCLEBTN_WIDTH, HEIGHT);
 	}

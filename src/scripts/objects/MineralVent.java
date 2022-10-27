@@ -27,11 +27,11 @@ public class MineralVent {
 	private double Io_weight;
 	private double Fr_weight;
 	
-	public MineralVent(double x, int height, double rate, double speed, int amount,
+	public MineralVent(Point pos, double rate, double speed, int amount,
 			double energy_weight, double N_weight, double A_weight, double D_weight, double P_weight,
 			double Ph_weight, double Cr_weight, double Nc_weight, double Io_weight, double Fr_weight) {
 		
-		this.position = new Point(x, height-1);
+		this.position = pos;
 		this.idle = 0;
 		
 		this.rate = rate;
@@ -50,11 +50,9 @@ public class MineralVent {
 		this.Fr_weight = Fr_weight;
 	}
 	
-	public void update(LinkedList<Resource> resources, int width, int height, long prevUpdateTime) {
+	public void update(LinkedList<Resource> resources, LinkedList<Block> blocks, int width, int height, long prevUpdateTime) {
 		
 		double timeElapsed = ((System.currentTimeMillis()-prevUpdateTime)/Microbiome.timeSpeed + 1);
-		
-		position.y = height-1;
 		
 		if(position.x < 0)
 			position.setX(0);
@@ -66,6 +64,24 @@ public class MineralVent {
 		else if(position.y >= height)
 			position.setY(height);
 		
+		double radius = getRadius();
+		for (Block block : blocks) {
+			if (position.x+radius > block.getPosition().x && position.x-radius < block.getPosition().x+block.getWidth() &&
+					position.y+radius > block.getPosition().y && position.y-radius < block.getPosition().y+block.getHeight()) {
+				
+				double l = position.x-block.getPosition().x;
+				double r = block.getWidth()+block.getPosition().x-position.x;
+				double t = position.y-block.getPosition().y;
+				double b = block.getHeight()+block.getPosition().y-position.y;
+				
+				if (Math.min(l, r) < Math.min(t, b)) {
+					position.setX(block.getPosition().x + ((l < r) ? (-radius) : (radius+block.getWidth())));
+				} else {
+					position.setY(block.getPosition().y + ((t < b) ? (-radius) : (radius+block.getHeight())));
+				}
+			}
+		}
+		
 		if(idle >= rate) {
 			
 			Point pos = position.clone();
@@ -73,7 +89,7 @@ public class MineralVent {
 			//pos.y -= Math.random()*speed*40;
 			
 			double xRand = Math.random()*speed*2 - speed;
-			double yRand = Math.random()*-speed - speed;
+			double yRand = Math.random()*speed*2 - speed;
 			Vector velocity = new Vector(xRand, yRand);
 			int aRand = (int) (Math.random()*amount + amount*0.5);
 			resources.add(new Resource(pos, randomType(), aRand, velocity));
@@ -86,12 +102,8 @@ public class MineralVent {
 		
 	}
 	
-	public double getX() {
-		return position.x;
-	}
-	
-	public double getHeight() {
-		return position.y+1;
+	public Point getPosition() {
+		return position;
 	}
 	
 	public double getRate() {

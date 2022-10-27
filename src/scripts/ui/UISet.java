@@ -1,5 +1,6 @@
 package scripts.ui;
 
+import scripts.objects.Block;
 import scripts.objects.MineralVent;
 import scripts.objects.Protein;
 import scripts.objects.Resource;
@@ -14,7 +15,7 @@ public class UISet {
 	private UI interfaceUI, interactionUI, configUI, graphicsConfigUI, dataDisplayConfigUI, mechanicsConfigUI, insertProteinsUI,
 		viewSamplesUI, addSampleUI, deleteSampleUI, disposeProteinsUI, viewSavesUI, environmentConfigUI, advancedConfigUI,
 		photosynthesisConfig, frynxMetabolismConfig, mutationConfig, mineralPairConfig, aminoAcidConfig, behaviorConfig,
-		addVentUI;
+		addVentUI, addBlockUI;
 	private UI currUI;	
 	
 	private Point prevMousePos;
@@ -24,7 +25,7 @@ public class UISet {
 	
 	public UISet(Point pos, InputControl inputCtrl, int width, int height,
 			LinkedList<Protein> proteins, LinkedList<Spore> spores, 
-			LinkedList<Resource> resources, LinkedList<MineralVent> mineralVents) {
+			LinkedList<Resource> resources, LinkedList<MineralVent> mineralVents, LinkedList<Block> blocks) {
 		prevMouseMovedTime = 0;
 		configOpened = false;
 		
@@ -33,7 +34,8 @@ public class UISet {
 		mechanicsConfigUI = MechanicsConfig.getNewMechanicsConfigUI(pos, inputCtrl);
 		configUI = Config.getNewConfigUI(pos, graphicsConfigUI, dataDisplayConfigUI, mechanicsConfigUI);
 		
-		addVentUI = AddVent.getNewAddVentUI(pos, inputCtrl, mineralVents, height);
+		addVentUI = AddVent.getNewAddVentUI(pos, inputCtrl, mineralVents);
+		addBlockUI = AddBlock.getNewAddBlockUI(pos, inputCtrl, blocks, width, height);
 		photosynthesisConfig = PhotosynthesisConfig.getNewPhotosynthesisConfigUI(pos, inputCtrl);
 		frynxMetabolismConfig = FrynxMetabolismConfig.getNewFrynxMetabolismConfigUI(pos, inputCtrl);
 		mutationConfig = MutationConfig.getNewMutationConfigUI(pos, inputCtrl);
@@ -47,8 +49,8 @@ public class UISet {
 		deleteSampleUI = DeleteSample.getNewDeleteSampleUI(pos, inputCtrl);
 		viewSamplesUI = ViewSamples.getNewViewSamplesUI(pos, inputCtrl, insertProteinsUI, addSampleUI, deleteSampleUI);
 		disposeProteinsUI = DisposeObjects.getNewDisposeObjectsUI(pos, inputCtrl, proteins, spores, resources, mineralVents);
-		viewSavesUI = ViewSaves.getNewViewSavesUI(pos, inputCtrl, proteins, spores, resources, mineralVents, height);
-		interactionUI = Interaction.getNewInteractionUI(pos, environmentConfigUI, insertProteinsUI, viewSamplesUI, disposeProteinsUI, addVentUI, viewSavesUI);
+		viewSavesUI = ViewSaves.getNewViewSavesUI(pos, inputCtrl, proteins, spores, resources, mineralVents, blocks, height);
+		interactionUI = Interaction.getNewInteractionUI(pos, environmentConfigUI, insertProteinsUI, viewSamplesUI, addBlockUI, disposeProteinsUI, addVentUI, viewSavesUI);
 		
 		interfaceUI = Interface.getNewInterfaceUI(pos, interactionUI, configUI);
 		

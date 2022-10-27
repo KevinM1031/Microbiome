@@ -106,6 +106,7 @@ class ViewSamplesUIFunc {
 	
 	public static void slot3_Func1(Returner<String> rtr) {
 		SampleDataIO.samples.get(ViewSamples.index).genome = rtr.get();
+		ViewSamples.sampleGenome = rtr.get();
 		rtr.set(rtr.get());
 		SampleDataIO.saveSamples();
 	}

@@ -81,6 +81,11 @@ public class Point {
 	}
 	
 	public void print() {
-		System.out.println("(" + x + ", " + y + ")");
+		System.out.println(toString());
+	}
+	
+	@Override
+	public String toString() {
+		return "(" + x + ", " + y + ")";
 	}
 }

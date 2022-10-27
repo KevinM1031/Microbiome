@@ -1,13 +1,25 @@
 package scripts.util;
 
 import java.awt.Graphics;
+import java.util.List;
 
 import scripts.data.SaveDataIO;
+import scripts.objects.Block;
 
 public class Utility {
 
 	public static boolean pointRectCollision(Point p, double x1, double y1, double x2, double y2) {
 		return p.x < x1 || p.x > x2 || p.y < y1 || p.y > y2;
+	}
+	
+	public static boolean pointBlocksCollision(Point p, List<Block> blocks) {
+		for (Block block : blocks) {
+			if (!pointRectCollision(p, block.getPosition().x, block.getPosition().y, 
+					block.getPosition().x+block.getWidth(), block.getPosition().y+block.getHeight())) {
+				return true;
+			}
+		}
+		return false;
 	}
 	
 	public static boolean pointRectInclusion(Point p, double x, double y, double w, double h) {
@@ -16,6 +28,16 @@ public class Utility {
 	
 	public static boolean circleRectCollision(Point p, double r, double x, double y, double w, double h) {
 		return p.x-r < x || p.x+r > w || p.y-r < y || p.y+r > h;
+	}
+	
+	public static boolean circleBlocksCollision(Point p, double r, List<Block> blocks) {
+		for (Block block : blocks) {
+			if (!circleRectCollision(p, r, block.getPosition().x-r, block.getPosition().y-r, 
+					block.getPosition().x+block.getWidth()+r*2, block.getPosition().y+block.getHeight()+r*2)) {
+				return true;
+			}
+		}
+		return false;
 	}
 	
 	public static boolean pointCircleCollision(Point p, double r, double x, double y) {

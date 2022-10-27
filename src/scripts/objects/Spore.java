@@ -15,6 +15,7 @@ public class Spore {
 	private static final double MAX_SPEED = 1.0;
 	private static final double LONG_INCUBATION_CHANCE = 0.18;
 	private static final double DECELERATION = 0.99;
+	private static final long COLLISION_CHECK_INTERVAL = 500;
 	
 	private Genome genome;
 	private int energy;
@@ -27,6 +28,7 @@ public class Spore {
 	
 	private double age;
 	private int incubationTime;
+	private long prevCollisionCheckTime;
 	
 	public Spore(Genome genome, int energy, Point position, boolean far, boolean longIncubation, boolean inserted, int age) {
 		this.genome = genome;
@@ -50,6 +52,7 @@ public class Spore {
 		double yRand = Math.random()*speed*2-speed;
 		this.velocity = new Vector(xRand, yRand);
 		this.inMotion = true;
+		prevCollisionCheckTime = 0;
 	}
 	
 	public Spore(Genome genome, int energy, Point position, boolean far, boolean longIncubation) {
@@ -84,7 +87,8 @@ public class Spore {
 		return (int) age;
 	}
 	
-	public void update(LinkedList<Spore> sporeRemoveList, LinkedList<Protein> proteins, int width, int height, long prevUpdateTime) {
+	public void update(LinkedList<Spore> sporeRemoveList, LinkedList<Protein> proteins, LinkedList<Block> blocks,
+			int width, int height, long prevUpdateTime) {
 		
 		double timeElapsed = ((System.currentTimeMillis()-prevUpdateTime)/Microbiome.timeSpeed + 1);
 		double trueRadius = radius * ConfigDataIO.object_radius;
@@ -97,7 +101,9 @@ public class Spore {
 			return;
 		}
 		
-		if(inMotion) {
+		if(inMotion || System.currentTimeMillis()-prevCollisionCheckTime < COLLISION_CHECK_INTERVAL) {
+			
+			prevCollisionCheckTime = System.currentTimeMillis();
 			
 			velocity.multX(Math.pow(DECELERATION, timeElapsed));
 			velocity.multY(Math.pow(DECELERATION, timeElapsed));
@@ -113,7 +119,8 @@ public class Spore {
 			} else if(position.x >= width-trueRadius) {
 				position.setX(width-trueRadius);
 				velocity.multX(-1);
-			} 
+				
+			}
 			
 			if(position.y < trueRadius) {
 				position.setY(trueRadius);
@@ -122,6 +129,25 @@ public class Spore {
 			} else if(position.y >= height-trueRadius) {
 				position.setY(height-trueRadius);
 				velocity.multY(-1);
+			}
+			
+			for (Block block : blocks) {
+				if (position.x+trueRadius > block.getPosition().x && position.x-trueRadius < block.getPosition().x+block.getWidth() &&
+						position.y+trueRadius > block.getPosition().y && position.y-trueRadius < block.getPosition().y+block.getHeight()) {
+					
+					double l = position.x-block.getPosition().x;
+					double r = block.getWidth()+block.getPosition().x-position.x;
+					double t = position.y-block.getPosition().y;
+					double b = block.getHeight()+block.getPosition().y-position.y;
+					
+					if (Math.min(l, r) < Math.min(t, b)) {
+						position.setX(block.getPosition().x + ((l < r) ? (-trueRadius) : (trueRadius+block.getWidth())));
+						velocity.multX(-1);
+					} else {
+						position.setY(block.getPosition().y + ((t < b) ? (-trueRadius) : (trueRadius+block.getHeight())));
+						velocity.multY(-1);
+					}
+				}
 			}
 			
 		}

@@ -16,6 +16,7 @@ public class Resource {
 	
 	public static final int ENERGY = 3001;
 	private static final double DECELERATION = 0.99;
+	private static final long COLLISION_CHECK_INTERVAL = 500;
 	
 	private Point position;
 	private double radius;
@@ -30,7 +31,8 @@ public class Resource {
 	private String variantName;
 	
 	private int age;
-	
+	private long prevCollisionCheckTime;
+
 	public Resource(Point position, int type, int amount, Vector velocity) {
 		
 		this.radius = calcRadius();
@@ -47,6 +49,7 @@ public class Resource {
 		this.inMotion = true;
 		
 		this.age = (int) (Math.random()*MAX_INIT_AGE);
+		prevCollisionCheckTime = 0;
 	}
 	
 	public Resource(Point position, int type, int amount, double speed) {
@@ -93,7 +96,7 @@ public class Resource {
 		return variantName;
 	}
 	
-	public void update(LinkedList<Resource> resourceRemoveList, int width, int height, long prevUpdateTime) {
+	public void update(LinkedList<Resource> resourceRemoveList, LinkedList<Block> blocks, int width, int height, long prevUpdateTime) {
 		
 		if(age >= MAX_AGE) {
 			resourceRemoveList.add(this);
@@ -104,7 +107,9 @@ public class Resource {
 		
 		radius = calcRadius();
 		
-		if(inMotion) {
+		if(inMotion || System.currentTimeMillis()-prevCollisionCheckTime < COLLISION_CHECK_INTERVAL) {
+			
+			prevCollisionCheckTime = System.currentTimeMillis();
 			
 			velocity.multX(Math.pow(DECELERATION, timeElapsed));
 			velocity.multY(Math.pow(DECELERATION, timeElapsed));
@@ -129,6 +134,25 @@ public class Resource {
 			} else if(position.y >= height-radius) {
 				position.setY(height-radius);
 				velocity.multY(-1);
+			}
+			
+			for (Block block : blocks) {
+				if (position.x+radius > block.getPosition().x && position.x-radius < block.getPosition().x+block.getWidth() &&
+						position.y+radius > block.getPosition().y && position.y-radius < block.getPosition().y+block.getHeight()) {
+					
+					double l = position.x-block.getPosition().x;
+					double r = block.getWidth()+block.getPosition().x-position.x;
+					double t = position.y-block.getPosition().y;
+					double b = block.getHeight()+block.getPosition().y-position.y;
+					
+					if (Math.min(l, r) < Math.min(t, b)) {
+						position.setX(block.getPosition().x + ((l < r) ? (-radius) : (radius+block.getWidth())));
+						velocity.multX(-1);
+					} else {
+						position.setY(block.getPosition().y + ((t < b) ? (-radius) : (radius+block.getHeight())));
+						velocity.multY(-1);
+					}
+				}
 			}
 			
 		}

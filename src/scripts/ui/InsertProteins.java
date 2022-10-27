@@ -34,7 +34,7 @@ public class InsertProteins {
 		width = width_;
 		height = height_;
 		
-		// SLOT 1 (TODO create and use long input slot)
+		// SLOT 1
 		UIEvent<Returner<String>> event11 = new UIEvent<Returner<String>>(InsertProteinsUIFunc::slot1_Func1, "Genome");
 		Slot slot1 = new LongInputSlot(event11, genome, inputCtrl);
 		

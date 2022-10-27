@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.util.LinkedList;
 
 import scripts.objects.Base;
+import scripts.objects.Block;
 import scripts.objects.Genome;
 import scripts.objects.Mineral;
 import scripts.objects.MineralVent;
@@ -103,7 +104,8 @@ public class SaveDataIO {
 	}
 	
 	public static void loadSave(LinkedList<Protein> proteins, LinkedList<Spore> spores, 
-			LinkedList<Resource> resources, LinkedList<MineralVent> mineralVents, int height) {
+			LinkedList<Resource> resources, LinkedList<MineralVent> mineralVents, 
+			LinkedList<Block> blocks, int height) {
 		
 		try {
 			FileReader reader = new FileReader("saves/saveDescriptions.txt");
@@ -127,7 +129,7 @@ public class SaveDataIO {
 			
 			reader.close();
 			
-			reloadSave(currIndex, true, proteins, spores, resources, mineralVents, height);
+			reloadSave(currIndex, true, proteins, spores, resources, mineralVents, blocks, height);
 			
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -136,7 +138,8 @@ public class SaveDataIO {
 		
 	public static void reloadSave(int index_, boolean updateIndex, 
 			LinkedList<Protein> proteins, LinkedList<Spore> spores, 
-			LinkedList<Resource> resources, LinkedList<MineralVent> mineralVents, int height) {
+			LinkedList<Resource> resources, LinkedList<MineralVent> mineralVents, 
+			LinkedList<Block> blocks, int height) {
 		
 		if (updateIndex) index = index_;
 		
@@ -308,7 +311,6 @@ public class SaveDataIO {
 			e.printStackTrace();
 		}
 		
-		
 		// spores
 		try {
 			FileReader reader = new FileReader("saves/save" + index_ + "/spores.txt");
@@ -406,7 +408,7 @@ public class SaveDataIO {
 			int raw, i = 0;
 			String str = "";
 			int amount = 0;
-			double x = 0, rate = 0, speed = 0, e=0, n=0, a=0, d=0, p=0, ph=0, cr=0, nc=0, io=0, fr=0;
+			double x = 0, y = 0, rate = 0, speed = 0, e=0, n=0, a=0, d=0, p=0, ph=0, cr=0, nc=0, io=0, fr=0;
 			
 			mineralVents.clear();
  
@@ -415,25 +417,66 @@ public class SaveDataIO {
 				
 				if (c == '\n') {
 					fr = Double.parseDouble(str);
-					mineralVents.addFirst(new MineralVent(x, height, rate, speed, amount, e, n, a, d, p, ph, cr, nc, io, fr));
+					mineralVents.addFirst(new MineralVent(new Point(x, y), rate, speed, amount, e, n, a, d, p, ph, cr, nc, io, fr));
 					i = 0;
 					str = "";
 					
 				} else if (c == '|') {
 					switch (i) {
 						case 0: x = Double.parseDouble(str); break;
-						case 1: rate = Double.parseDouble(str); break;
-						case 2: speed = Double.parseDouble(str); break;
-						case 3: amount = Integer.parseInt(str); break;
-						case 4: e = Double.parseDouble(str); break;
-						case 5: n = Double.parseDouble(str); break;
-						case 6: a = Double.parseDouble(str); break;
-						case 7: d = Double.parseDouble(str); break;
-						case 8: p = Double.parseDouble(str); break;
-						case 9: ph = Double.parseDouble(str); break;
-						case 10: cr = Double.parseDouble(str); break;
-						case 11: nc = Double.parseDouble(str); break;
-						case 12: io = Double.parseDouble(str); break;
+						case 1: y = Double.parseDouble(str); break;
+						case 2: rate = Double.parseDouble(str); break;
+						case 3: speed = Double.parseDouble(str); break;
+						case 4: amount = Integer.parseInt(str); break;
+						case 5: e = Double.parseDouble(str); break;
+						case 6: n = Double.parseDouble(str); break;
+						case 7: a = Double.parseDouble(str); break;
+						case 8: d = Double.parseDouble(str); break;
+						case 9: p = Double.parseDouble(str); break;
+						case 10: ph = Double.parseDouble(str); break;
+						case 11: cr = Double.parseDouble(str); break;
+						case 12: nc = Double.parseDouble(str); break;
+						case 13: io = Double.parseDouble(str); break;
+					}
+					
+					str = "";
+					i++;
+				
+				} else {
+					str += c;
+				}
+
+			}
+			
+			reader.close();
+			
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+		// blocks
+		try {
+			FileReader reader = new FileReader("saves/save" + index_ + "/blocks.txt");
+			int raw, i = 0;
+			String str = "";
+			double x = 0, y = 0, w = 50, h = 50;
+			
+			blocks.clear();
+ 
+			while ((raw = reader.read()) != -1) {
+				char c = (char) raw;
+				
+				if (c == '\n') {
+					h = Double.parseDouble(str);
+					blocks.addFirst(new Block(new Point(x, y), w, h));
+					i = 0;
+					str = "";
+					
+				} else if (c == '|') {
+					switch (i) {
+						case 0: x = Double.parseDouble(str); break;
+						case 1: y = Double.parseDouble(str); break;
+						case 2: w = Double.parseDouble(str); break;
 					}
 					
 					str = "";
@@ -470,7 +513,8 @@ public class SaveDataIO {
 	
 	public static void updateSave(int index_, 
 			LinkedList<Protein> proteins, LinkedList<Spore> spores, 
-			LinkedList<Resource> resources, LinkedList<MineralVent> mineralVents) {
+			LinkedList<Resource> resources, LinkedList<MineralVent> mineralVents,
+			LinkedList<Block> blocks) {
 		
 		updateConfig();
 		
@@ -528,7 +572,7 @@ public class SaveDataIO {
 		// vents
 		saveData = "";
 		for (MineralVent v : mineralVents) {
-			saveData += v.getX() + "|" + v.getRate() + "|" + v.getSpeed() + "|" + v.getAmount() + "|" +
+			saveData += v.getPosition().x + "|" + v.getPosition().y + "|" + v.getRate() + "|" + v.getSpeed() + "|" + v.getAmount() + "|" +
 						v.getWeight(Resource.ENERGY) + "|" + v.getWeight(Base.N) + "|" + 
 						v.getWeight(Base.A) + "|" + v.getWeight(Base.D) + "|" + 
 						v.getWeight(Base.P) + "|" + v.getWeight(Mineral.Ph) + "|" + 
@@ -543,11 +587,25 @@ public class SaveDataIO {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+		
+		// blocks
+		saveData = "";
+		for (Block b : blocks) {
+			saveData += b.getPosition().x + "|" + b.getPosition().y + "|" + b.getWidth() + "|" + b.getHeight() + "\n";
+		}
+		try {
+			FileWriter writer = new FileWriter("saves/save" + index_ + "/blocks.txt");
+			writer.write(saveData);
+			writer.close();
+
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 
 	public static void updateSave(LinkedList<Protein> proteins, LinkedList<Spore> spores,
-			LinkedList<Resource> resources, LinkedList<MineralVent> mineralVents) {
-		updateSave(index, proteins, spores, resources, mineralVents);
+			LinkedList<Resource> resources, LinkedList<MineralVent> mineralVents,  LinkedList<Block> blocks) {
+		updateSave(index, proteins, spores, resources, mineralVents, blocks);
 	}
 	
 	public static void updateConfig(int index_) {

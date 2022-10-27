@@ -17,6 +17,7 @@ import scripts.data.SampleDataIO;
 import scripts.data.SaveDataIO;
 import scripts.objects.AminoAcid;
 import scripts.objects.Base;
+import scripts.objects.Block;
 import scripts.objects.Environment;
 import scripts.objects.Genome;
 import scripts.objects.Mineral;
@@ -43,6 +44,7 @@ public class Painter extends JPanel {
 	private LinkedList<Resource> resources;
 	
 	private LinkedList<MineralVent> mineralVents;
+	private LinkedList<Block> blocks;
 	
 	private Object selectedObject;
 	
@@ -73,10 +75,11 @@ public class Painter extends JPanel {
 		spores = new LinkedList<Spore>();
 		resources = new LinkedList<Resource>();
 		mineralVents = new LinkedList<MineralVent>();
+		blocks = new LinkedList<Block>();
 		
 		ConfigDataIO.loadConfig();
 		SampleDataIO.loadSamples();
-		SaveDataIO.loadSave(proteins, spores, resources, mineralVents, getHeight());
+		SaveDataIO.loadSave(proteins, spores, resources, mineralVents, blocks, getHeight());
 		
 		/*
 		// lower rank predator
@@ -134,7 +137,7 @@ public class Painter extends JPanel {
 		y = 0;
 		
 		UISystem = new UISet(new Point((getWidth()-UI.BORDER_SIZE-Slot.WIDTH)/2, 80), inputCtrl, getWidth(), getHeight(),
-				proteins, spores, resources, mineralVents);
+				proteins, spores, resources, mineralVents, blocks);
 		
 		prevUpdateTime = System.currentTimeMillis();
 		prevAutoSaveTime = prevUpdateTime;
@@ -157,7 +160,7 @@ public class Painter extends JPanel {
 		
 		// Auto save
 		if (ConfigDataIO.auto_save != 0 && prevUpdateTime > prevAutoSaveTime + Math.pow(10, ConfigDataIO.auto_save-1)*1000) {
-			SaveDataIO.updateSave(proteins, spores, resources, mineralVents);
+			SaveDataIO.updateSave(proteins, spores, resources, mineralVents, blocks);
 			prevAutoSaveTime = prevUpdateTime;
 		}
 		
@@ -239,13 +242,13 @@ public class Painter extends JPanel {
 		// Updating mineral vents
 		for(MineralVent mineralVent : mineralVents) {
 			if (Microbiome.SIM_RUNNING) 
-				mineralVent.update(resources, getWidth(), getHeight(), prevUpdateTime);
+				mineralVent.update(resources, blocks, getWidth(), getHeight(), prevUpdateTime);
 		}
 		
 		// Updating resources and drawing them
 		for(Resource resource : resources) {
 			if (Microbiome.SIM_RUNNING) 
-				resource.update(resourceRemoveList, getWidth(), getHeight(), prevUpdateTime);
+				resource.update(resourceRemoveList, blocks, getWidth(), getHeight(), prevUpdateTime);
 			drawCircle((int) resource.getPosition().x, (int) resource.getPosition().y, (int) resource.getRadius(), 
 					new Color(resource.getColor().getRed(), resource.getColor().getGreen(), resource.getColor().getBlue(), 
 					(int) (ConfigDataIO.resource_opacity/100.0*255)),
@@ -272,7 +275,7 @@ public class Painter extends JPanel {
 		// Updating each spore and drawing them
 		for(Spore spore : spores) {
 			if (Microbiome.SIM_RUNNING)
-				spore.update(sporeRemoveList, proteins, getWidth(), getHeight(), prevUpdateTime);
+				spore.update(sporeRemoveList, proteins, blocks, getWidth(), getHeight(), prevUpdateTime);
 			Color c = spore.longIncubation() ? 
 					new Color(127, 0, 255, (int) (ConfigDataIO.protein_opacity/100.0*255)) :
 					new Color(255, 127, 0, (int) (ConfigDataIO.protein_opacity/100.0*255));
@@ -286,7 +289,7 @@ public class Painter extends JPanel {
 		// Updating each protein
 		for(Protein protein : proteins) {
 			if (Microbiome.SIM_RUNNING)
-				protein.update(proteins, proteinRemoveList, resources, resourceRemoveList, getWidth(), getHeight(), prevUpdateTime);
+				protein.update(proteins, proteinRemoveList, resources, resourceRemoveList, blocks, getWidth(), getHeight(), prevUpdateTime);
 			
 			if((selectedObject != null && protein.equals(selectedObject)) || (selectedObject == null && 
 					Utility.pointCircleCollision(mousePosition(), protein.getRadius(), protein.getPosition().x, protein.getPosition().y)))
@@ -295,18 +298,24 @@ public class Painter extends JPanel {
 		
 		// Drawing mineral vents
 		for(MineralVent mineralVent : mineralVents) {
-			int x = (int) mineralVent.getX();
-			int y = getHeight()-1;
+			int x = (int) mineralVent.getPosition().x;
+			int y = (int) mineralVent.getPosition().y;
 			int r = mineralVent.getRadius();
-			Polygon poly = new Polygon(new int[] {x-r, x, x+r}, new int[] {y, y-r*2, y}, 3);
+			Polygon poly = new Polygon(new int[] {x-r, x, x+r, x}, new int[] {y, y-r, y, y+r}, 4);
 			G.setColor(new Color(255, 0, 102, (int) (ConfigDataIO.protein_opacity/100.0*255)));
 			G.fillPolygon(poly);
 			G.setColor(Color.getHSBColor(0, 0, ConfigDataIO.protein_outline_brightness/100f));
 			G.drawPolygon(poly);
 			
 			if((selectedObject != null && mineralVent.equals(selectedObject)) || (selectedObject == null && 
-					Utility.pointCircleCollision(mousePosition(), mineralVent.getRadius()*1.3333, mineralVent.getX(), getHeight()-mineralVent.getRadius())))
+					Utility.pointCircleCollision(mousePosition(), mineralVent.getRadius()*1.3333, mineralVent.getPosition().x, mineralVent.getPosition().y)))
 				selectedObject = mineralVent;
+		}
+		
+		// Drawing blocks
+		G.setColor(Block.COLOR);
+		for (Block block : blocks) {
+			block.draw(G);
 		}
 				
 		if(inputCtrl.leftPressed()) keepObjectSelected = selectedObject != null;
@@ -332,6 +341,7 @@ public class Painter extends JPanel {
 			showGeneralStats = !showGeneralStats;
 		if(showGeneralStats) drawGeneralStats(G);
 		
+		// Drawing UI
 		UISystem.update(mousePosition(), inputCtrl.leftPressed());
 		UISystem.draw(G);
 		
@@ -496,7 +506,7 @@ public class Painter extends JPanel {
 		G.setColor(UI.COLOR_PRIMARY);
 		G.drawString("Mineral Vent", 10, 20);
 		
-		G.drawString("[Position] (" + (int)(vent.getX()*100)/100.0 + ", " + (getHeight()-1.0) + ")", 10, 45);
+		G.drawString("[Position] (" + (int)(vent.getPosition().x*100)/100.0 + ", " + (int)(vent.getPosition().y*100)/100.0 + ")", 10, 45);
 		G.drawString("[Release Interval] " + (int)(vent.getRate()*100)/100.0 + " t", 10, 60);
 		G.drawString("[Release Velocity] " + (int)(vent.getSpeed()*100)/100.0 + " px/t", 10, 75);
 		G.drawString("[Average Amount] " + vent.getAmount(), 10, 90);
@@ -514,7 +524,7 @@ public class Painter extends JPanel {
 		G.drawString("[Io Weight] " + (int)(vent.getWeight(Mineral.Io)*100)/100.0, 10, 235);
 		G.drawString("[Fr Weight] " + (int)(vent.getWeight(Mineral.Fr)*100)/100.0, 10, 250);
 		
-		drawCircle((int) vent.getX(), (int) getHeight()-vent.getRadius(), (int) (vent.getRadius()*1.3333), Color.MAGENTA, G);
+		drawCircle((int) vent.getPosition().x, (int) vent.getPosition().y, (int) (vent.getRadius()*1.3333), Color.MAGENTA, G);
 	}
 	
 	private void drawGeneralStats(Graphics G) {
