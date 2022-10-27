@@ -439,8 +439,8 @@ public class Protein {
 		
 		double halfRadius = radius/2;
 		
-		if (speed > 0 || System.currentTimeMillis()-prevImmobileProteinCollisionCheckTime < IMMOBILE_PROTEIN_COLLISION_CHECK_INTERVAL) {
-			
+		if (speed > 0 || System.currentTimeMillis()-prevImmobileProteinCollisionCheckTime > IMMOBILE_PROTEIN_COLLISION_CHECK_INTERVAL) {
+						
 			prevImmobileProteinCollisionCheckTime = System.currentTimeMillis();
 			
 			if(position.x < halfRadius) {
@@ -470,7 +470,7 @@ public class Protein {
 					double t = position.y-block.getPosition().y;
 					double b = block.getHeight()+block.getPosition().y-position.y;
 					
-					if (speed <= 0) energySpent += Math.max(1000, storage.getEnergy()/20);
+					if (speed <= 0) energySpent += Math.max(10000, storage.getEnergy()/10);
 					else rotationGoal = rotationGoal + Math.random()*2*Math.PI - Math.PI;
 					
 					if (Math.min(l, r) < Math.min(t, b)) {

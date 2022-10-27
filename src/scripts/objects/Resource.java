@@ -107,7 +107,7 @@ public class Resource {
 		
 		radius = calcRadius();
 		
-		if(inMotion || System.currentTimeMillis()-prevCollisionCheckTime < COLLISION_CHECK_INTERVAL) {
+		if(inMotion || System.currentTimeMillis()-prevCollisionCheckTime > COLLISION_CHECK_INTERVAL) {
 			
 			prevCollisionCheckTime = System.currentTimeMillis();
 			

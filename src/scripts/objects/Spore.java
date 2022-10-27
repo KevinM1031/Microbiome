@@ -101,7 +101,7 @@ public class Spore {
 			return;
 		}
 		
-		if(inMotion || System.currentTimeMillis()-prevCollisionCheckTime < COLLISION_CHECK_INTERVAL) {
+		if(inMotion || System.currentTimeMillis()-prevCollisionCheckTime > COLLISION_CHECK_INTERVAL) {
 			
 			prevCollisionCheckTime = System.currentTimeMillis();
 			
