@@ -56,12 +56,12 @@ public class AddBlock {
 		
 		// SLOT 3
 		UIEvent<Returner<String>> event3 = new UIEvent<Returner<String>>(AddBlockUIFunc::slot3_Func1, "x-Coordinate");
-		xSlot = new InputSlot(event3, x+"", "", " px/t", inputCtrl);
+		xSlot = new InputSlot(event3, x+"", "", " px", inputCtrl);
 		xSlot.setActive(!insertPreset);
 		
 		// SLOT 4
 		UIEvent<Returner<String>> event4 = new UIEvent<Returner<String>>(AddBlockUIFunc::slot4_Func1, "y-Coordinate");
-		ySlot = new InputSlot(event4, y+"", "", " per release", inputCtrl);
+		ySlot = new InputSlot(event4, y+"", "", " px", inputCtrl);
 		ySlot.setActive(!insertPreset);
 		
 		// SLOT 5
@@ -71,7 +71,7 @@ public class AddBlock {
 		
 		// SLOT 6
 		UIEvent<Returner<String>> event6 = new UIEvent<Returner<String>>(AddBlockUIFunc::slot6_Func1, "Height");
-		hSlot = new InputSlot(event6, h+"", "", " t", inputCtrl);
+		hSlot = new InputSlot(event6, h+"", "", " px", inputCtrl);
 		hSlot.setActive(!insertPreset);
 		
 		// SLOT 7

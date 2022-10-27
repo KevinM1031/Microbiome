@@ -97,6 +97,7 @@ class InsertProteinsUIFunc {
 		} catch(NumberFormatException e) {}
 		
 		InsertProteins.genome = str;
+		rtr.set(str);
 	}
 	
 	public static void slot2_Func1(int n) {
@@ -112,6 +113,7 @@ class InsertProteinsUIFunc {
 		} catch(NumberFormatException e) {}
 		
 		InsertProteins.insertPos.x = n;
+		rtr.set(n+"");
 	}
 	
 	public static void slot4_Func1(Returner<String> rtr) {
@@ -121,6 +123,7 @@ class InsertProteinsUIFunc {
 		} catch(NumberFormatException e) {}
 		
 		InsertProteins.insertPos.y = n;
+		rtr.set(n+"");
 	}
 	
 	public static void slot5_Func1(int n) {
