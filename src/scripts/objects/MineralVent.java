@@ -92,7 +92,7 @@ public class MineralVent {
 			double yRand = Math.random()*speed*2 - speed;
 			Vector velocity = new Vector(xRand, yRand);
 			int aRand = (int) (Math.random()*amount + amount*0.5);
-			resources.add(new Resource(pos, randomType(), aRand, velocity));
+			resources.add(new Resource(pos, randomType(), (int) (aRand*timeElapsed/4), velocity));
 			
 			idle = 0;
 						

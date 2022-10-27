@@ -28,6 +28,7 @@ Java.
 		Section 2 - Essentials
 		Section 3 - Protein Organisms and Genome Translation
 		Section 4 - Amino Acids
+		Section 5 - Physics
 
 ===================================================================================================================================
 
@@ -126,19 +127,59 @@ The following four pieces of information derived from these four bases will dete
 Section 4 - Amino Acids
 
 NN - Propulsion IIa
-		Rapid propulsion part A (must attach NN).
-		"Adds significant speed / axle of NA"
-		speed = n*tier + adjacent_NA.speed (only the first NA has an effect)
+		Rapid propulsion part A
+		"Precisely, reduces friction and allows for free motion; behaves as an axle."
+
+		* must attach NN
+
+		speed += n*tier + adjacent_NA.speed (only the first NA has an effect)
 		
 NA - Propulsion IIb
-		Rapid propulsion part B (must be attached to NN / must not attach any other amino acids)
-		"Adds significant speed / wheel part of NN"
-		speed = tier
+		Rapid propulsion part B
+		"Precisely, reduces friction and allows for free motion; behaves as a wheel."
+
+		* must be attached to NN
+		* must not attach any other amino acids
+
+		speed += tier
 
 ND - Dissolver I
+		Short-range protein dissolver / slightly increases threat level
+		"Dissolves all other proteins and reduces them into its component resources. Also repels against AA via threat level."
+		
+		* activates only when attracted toward a pray with AN
+		* uses hunting energy while active
+
+		threat_level += n
+		hunting_energy += n*ND_energy*tier
+		
 NP - Dissolver II
+		Long-range protein dissolver / significantly increases threat level
+		"Dissolves all other proteins and reduces them into its component resources. Also repels against AA via threat level."
+		
+		* activates only when attracted toward a pray with AN
+		* uses significant amounts of hunting energy while active
+
+		threat_level += n*4
+		hunting_energy += n*NP_energy*tier
+
 AN - Attraction/P
+		Prey attraction
+		"Increases the range of attraction toward proteins with lower threat level."
+
+		* a target counts as prey if it meets all of the following criteria:
+				target != self
+				target.perceived_threat_level < self.prey_threshold * prey_threshold
+				self.energy < self.max_energy*starvation_threshold OR target.energy < self.max_energy*prey_min_energy
+
+		prey_radius = sqrt(n) * AN_radius
+
 AA - Repulsion/P
+		Predator repulsion
+		"Increases the range of repulsion against proteins with higher threat level."
+		
+		prey_radius = sqrt(n) * AN_radius
+
 AD - Attraction/R
 AP - Absorption
 DN - Temperature
@@ -150,6 +191,9 @@ PA - Production/S
 PD - Attraction/T
 PP - Reproduction
 
+===================================================================================================================================
 
+threat_level = (AN == 0) ? (ND_count + NP_count*4) : 0
 
+energy_spent = ((speed/10)^2)*mass + mass + heating_energy + hunting_energy + immobile_suffocation_energy J/t
 

@@ -136,11 +136,11 @@ public class Protein {
 			
 			} else if(acid.typeEquals("DP")) {
 				switch(acid.getTier()) {
-				case 1: threatReduction += SaveDataIO.DP_reduction; break;
-				case 2: threatReduction += SaveDataIO.DP_reduction*2; break;
-				case 3: threatReduction -= SaveDataIO.DP_reduction; break;
-				case 4: threatReduction -= SaveDataIO.DP_reduction*2; break;
-			}
+					case 1: threatReduction += SaveDataIO.DP_reduction; break;
+					case 2: threatReduction += SaveDataIO.DP_reduction*2; break;
+					case 3: threatReduction -= SaveDataIO.DP_reduction; break;
+					case 4: threatReduction -= SaveDataIO.DP_reduction*2; break;
+				}
 			
 			} else if(acid.typeEquals("AN"))
 				countAN += acid.getTier();
@@ -724,8 +724,8 @@ public class Protein {
 	
 	private boolean isPrey(Protein p) {
 		return !equals(p) && p.getPerceivedThreatLevel() < info.getThreatLevel()*SaveDataIO.prey_threat_level && 
-				(storage.getEnergy() > storage.getMaxEnergy()*SaveDataIO.starvation_threshold || 
-						p.getStorage().getEnergy() < storage.getMaxEnergy()*SaveDataIO.prey_min_energy);
+				(storage.getEnergy() < storage.getMaxEnergy()*SaveDataIO.starvation_threshold || 
+						p.getStorage().getEnergy() > storage.getMaxEnergy()*SaveDataIO.prey_min_energy);
 	}
 	
 	private boolean willIgnoreTemp() {
