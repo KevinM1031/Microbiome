@@ -48,7 +48,7 @@ public class UISet {
 		addSampleUI = AddSample.getNewAddSampleUI(pos, inputCtrl);
 		deleteSampleUI = DeleteSample.getNewDeleteSampleUI(pos, inputCtrl);
 		viewSamplesUI = ViewSamples.getNewViewSamplesUI(pos, inputCtrl, insertProteinsUI, addSampleUI, deleteSampleUI);
-		disposeProteinsUI = DisposeObjects.getNewDisposeObjectsUI(pos, inputCtrl, proteins, spores, resources, mineralVents);
+		disposeProteinsUI = DisposeObjects.getNewDisposeObjectsUI(pos, inputCtrl, proteins, spores, resources, mineralVents, blocks);
 		viewSavesUI = ViewSaves.getNewViewSavesUI(pos, inputCtrl, proteins, spores, resources, mineralVents, blocks, height);
 		interactionUI = Interaction.getNewInteractionUI(pos, environmentConfigUI, insertProteinsUI, viewSamplesUI, addBlockUI, disposeProteinsUI, addVentUI, viewSavesUI);
 		

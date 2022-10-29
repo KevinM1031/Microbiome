@@ -4,7 +4,7 @@ import java.awt.Toolkit;
 
 public class Microbiome {
 
-	private static final String TITLE = "Microbiome v2.1.2";
+	private static final String TITLE = "Microbiome v2.1.5";
 	private final static boolean RUNNING = true;
 	
 	public static final int WIDTH = Toolkit.getDefaultToolkit().getScreenSize().width;

@@ -3,6 +3,7 @@ package scripts.ui;
 import java.util.ArrayList;
 import java.util.LinkedList;
 
+import scripts.objects.Block;
 import scripts.objects.MineralVent;
 import scripts.objects.Protein;
 import scripts.objects.Resource;
@@ -17,16 +18,18 @@ public class DisposeObjects {
 	protected static LinkedList<Spore> spores;
 	protected static LinkedList<Resource> resources;
 	protected static LinkedList<MineralVent> vents;
+	protected static LinkedList<Block> blocks;
 	
 	protected static UI recentUI;
 	
 	public static UI getNewDisposeObjectsUI(Point pos, InputControl inputCtrl, LinkedList<Protein> proteins_, LinkedList<Spore> spores_, 
-			LinkedList<Resource> resources_, LinkedList<MineralVent> vents_) {
+			LinkedList<Resource> resources_, LinkedList<MineralVent> vents_, LinkedList<Block> blocks_) {
 		
 		proteins = proteins_;
 		spores = spores_;
 		resources = resources_;
 		vents = vents_;
+		blocks = blocks_;
 		recentUI = new UI(pos, "Dispose Objects");
 		
 		// SLOT 1
@@ -45,12 +48,17 @@ public class DisposeObjects {
 		UIEvent<Integer> event41 = new UIEvent<Integer>(DisposeObjectsUIFunc::slot4_Func1, "Dispose All Mineral Vents");
 		Slot slot4 = new ActionSlot(event41);
 		
+		// SLOT 5
+		UIEvent<Integer> event51 = new UIEvent<Integer>(DisposeObjectsUIFunc::slot5_Func1, "Dispose All Blocks");
+		Slot slot5 = new ActionSlot(event51);
+		
 		// SUMMARY
 		ArrayList<Slot> slots = new ArrayList<Slot>();
 		slots.add(slot1);
 		slots.add(slot2);
 		slots.add(slot3);
 		slots.add(slot4);
+		slots.add(slot5);
 		recentUI.setSlots(slots);
 		
 		return recentUI;
@@ -73,5 +81,9 @@ class DisposeObjectsUIFunc {
 	
 	public static void slot4_Func1(int n) {
 		DisposeObjects.vents.clear();
+	}
+	
+	public static void slot5_Func1(int n) {
+		DisposeObjects.blocks.clear();
 	}
 }
